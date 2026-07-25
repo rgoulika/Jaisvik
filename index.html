@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="theme-color" content="#EFEAFF"/>
+<title>Jaisvik's Play Shelf</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%237C4DFF'/%3E%3Ctext x='50' y='72' font-size='58' text-anchor='middle'%3E%E2%AD%90%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#2B2140; --paper:#EFEAFF; --card:#FFFFFF;
+  --mango:#FF9F1C; --berry:#FF5D8F; --leaf:#2EC4B6; --sky:#4CC9F0; --grape:#7C4DFF; --lime:#B8E635;
+  --display:'Fredoka', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
+  --body:'Nunito', ui-rounded, system-ui, sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-weight:800;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  -webkit-user-select:none;user-select:none;
+}
+.wrap{max-width:520px;margin:0 auto;padding:26px 16px 34px}
+h1{font-family:var(--display);font-weight:700;font-size:38px;line-height:1.02;margin:0 0 6px;letter-spacing:-.5px}
+.sub{font-size:15px;opacity:.6;margin:0 0 24px}
+.shelf{display:grid;gap:14px}
+a.app{
+  display:flex;align-items:center;gap:16px;text-decoration:none;color:var(--ink);
+  border:4px solid var(--ink);border-radius:26px;box-shadow:6px 6px 0 var(--ink);
+  padding:18px;font-family:var(--display);font-weight:700;
+  transition:transform .08s,box-shadow .08s;
+}
+a.app:active{transform:translate(4px,4px);box-shadow:2px 2px 0 var(--ink)}
+a.app .em{font-size:44px;line-height:1;flex:0 0 auto}
+a.app .t{font-size:25px;line-height:1.08;display:block}
+a.app .d{font-family:var(--body);font-weight:800;font-size:13px;opacity:.72;margin-top:3px;display:block}
+.c1{background:var(--mango)} .c2{background:var(--sky)} .c3{background:var(--berry)}
+.c4{background:var(--leaf)} .c5{background:var(--lime)}
+footer{
+  margin-top:26px;border-top:4px dashed var(--ink);padding-top:16px;
+  font-size:13px;opacity:.62;line-height:1.55
+}
+:focus-visible{outline:4px solid var(--grape);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Jaisvik's<br>Play Shelf</h1>
+  <p class="sub" id="greet">Pick something to play</p>
+
+  <div class="shelf">
+    <a class="app c1" href="talk-time-kids-1.html">
+      <span class="em">🎤</span>
+      <span><span class="t">Talk Time</span><span class="d">Say words and sentences out loud</span></span>
+    </a>
+    <a class="app c2" href="word-chart-2.html">
+      <span class="em">🔤</span>
+      <span><span class="t">Word Chart</span><span class="d">Letters and new words</span></span>
+    </a>
+    <a class="app c3" href="maths-lab.html">
+      <span class="em">🔢</span>
+      <span><span class="t">Maths Lab</span><span class="d">Numbers and counting</span></span>
+    </a>
+    <a class="app c4" href="measure-playground.html">
+      <span class="em">📏</span>
+      <span><span class="t">Measure Playground</span><span class="d">Big, small, long, short</span></span>
+    </a>
+    <a class="app c5" href="solar-system-speaks.html">
+      <span class="em">🪐</span>
+      <span><span class="t">Solar System</span><span class="d">Meet the planets</span></span>
+    </a>
+  </div>
+
+  <footer>
+    Works best in Chrome. For the apps that listen, tap Allow when the microphone is requested.
+  </footer>
+</div>
+<script>
+  var h = new Date().getHours(), g = document.getElementById("greet");
+  g.textContent = h < 12 ? "Good morning! Pick something to play"
+                : h < 17 ? "Pick something to play"
+                : "Good evening! Pick something to play";
+</script>
+</body>
+</html>
