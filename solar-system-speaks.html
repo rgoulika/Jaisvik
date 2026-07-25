@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0B0620">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Orrery — tap a planet, hear its name</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Nunito:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#0B0620;
+    --nebula:#1E1140;
+    --brass:#E8B04B;
+    --brass-dim:#8A6A2A;
+    --chalk:#F2ECE4;
+    --teal:#57D9C4;
+    --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+    --body:"Nunito","Segoe UI",system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;margin:0;overflow:hidden}
+  body{
+    background:
+      radial-gradient(120% 80% at 50% 8%, #2A1856 0%, var(--nebula) 38%, var(--void) 78%);
+    color:var(--chalk);
+    font-family:var(--body);
+    user-select:none;
+    display:flex;flex-direction:column;
+  }
+
+  /* ---------- stars ---------- */
+  #stars{position:fixed;inset:0;z-index:0;opacity:.75}
+
+  /* ---------- top bar ---------- */
+  header{
+    position:relative;z-index:3;
+    padding:calc(env(safe-area-inset-top) + 14px) 16px 10px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .wordmark{flex:1;min-width:0}
+  .wordmark h1{
+    font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.02em;
+    margin:0;line-height:1;
+  }
+  .wordmark p{
+    margin:4px 0 0;font-family:var(--mono);font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--brass);opacity:.85;
+  }
+  .tog{
+    height:40px;min-width:40px;padding:0 12px;border-radius:20px;
+    background:rgba(242,236,228,.06);border:1px solid rgba(232,176,75,.35);
+    color:var(--chalk);font-family:var(--mono);font-size:12px;letter-spacing:.06em;
+    display:grid;place-items:center;cursor:pointer;
+  }
+  .tog[aria-pressed="true"]{background:rgba(232,176,75,.18);border-color:var(--brass);color:var(--brass)}
+  .tog:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+
+  /* fullscreen: hand the whole screen to the map */
+  body.fs header{padding-top:10px;padding-bottom:6px}
+  body.fs .wordmark h1{display:none}
+  body.fs #nameRow{display:none}
+
+  /* ---------- name row ---------- */
+  #nameRow{
+    position:relative;z-index:3;padding:0 16px 6px;display:flex;align-items:center;gap:10px;
+  }
+  #nameRow label{
+    font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+    color:rgba(242,236,228,.55);white-space:nowrap;
+  }
+  #who{
+    flex:1;min-width:0;height:42px;padding:0 14px;border-radius:21px;
+    background:rgba(242,236,228,.07);border:1px solid rgba(232,176,75,.35);
+    color:var(--chalk);font-family:var(--body);font-weight:700;font-size:15px;
+  }
+  #who::placeholder{color:rgba(242,236,228,.35);font-weight:400}
+  #who:focus{outline:none;border-color:var(--brass);background:rgba(232,176,75,.1)}
+
+
+  /* ---------- stage ---------- */
+  #stageWrap{flex:1;position:relative;z-index:1;overflow:hidden;touch-action:none}
+  #stage{
+    position:absolute;left:50%;top:50%;width:1120px;height:1120px;margin:-560px 0 0 -560px;
+    transform:translate(var(--tx,0px),var(--ty,0px)) scale(var(--fit,1));
+    transform-origin:50% 50%;
+  }
+  .orbit{
+    position:absolute;left:50%;top:50%;border-radius:50%;
+    border:1px dashed rgba(232,176,75,.16);
+    transform:translate(-50%,-50%);
+    animation:spin var(--dur) linear infinite;
+    pointer-events:none;            /* rings must never swallow a tap */
+  }
+  .orbit.on{border-color:rgba(232,176,75,.5);border-style:solid}
+  .peg{position:absolute;left:50%;top:0;transform:translate(-50%,-50%)}
+  .planet{
+    position:relative;display:block;padding:0;border:0;background:none;cursor:pointer;
+    pointer-events:auto;            /* but the planet itself is tappable */
+    animation:spin var(--dur) linear infinite reverse;
+  }
+  .planet::after{ /* generous touch target regardless of planet size */
+    content:"";position:absolute;left:50%;top:50%;
+    width:max(58px, calc(var(--s) + 22px));height:max(58px, calc(var(--s) + 22px));
+    transform:translate(-50%,-50%);border-radius:50%;
+  }
+  .planet:focus-visible{outline:none}
+  .planet:focus-visible .body{box-shadow:0 0 0 3px var(--teal)}
+  .body{
+    width:var(--s);height:var(--s);border-radius:50%;background:var(--fill);
+    box-shadow:inset -3px -3px 8px rgba(0,0,0,.55), 0 0 12px -2px var(--halo);
+    transition:box-shadow .25s ease;
+  }
+  .planet.on .body{box-shadow:inset -3px -3px 8px rgba(0,0,0,.5), 0 0 0 2px var(--chalk), 0 0 26px 4px var(--halo)}
+  .ring{
+    position:absolute;left:50%;top:50%;width:calc(var(--s) * 1.6);height:calc(var(--s) * .5);
+    transform:translate(-50%,-50%) rotate(-18deg);
+    border:2px solid rgba(232,176,75,.65);border-radius:50%;
+  }
+  .tag{
+    position:absolute;left:50%;top:calc(50% + var(--s) * .55);transform:translateX(-50%);
+    font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    color:rgba(242,236,228,.55);white-space:nowrap;padding-top:8px;
+  }
+  .planet.on .tag{color:var(--brass)}
+
+  /* sun */
+  #sun{
+    --s:84px;
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    border:0;background:none;padding:0;cursor:pointer;
+  }
+  #sun .body{
+    width:var(--s);height:var(--s);
+    background:radial-gradient(circle at 38% 34%, #FFF3C4 0%, #FFC94A 40%, #F08A1D 72%, #C4470E 100%);
+    box-shadow:0 0 50px 10px rgba(255,180,60,.45), 0 0 150px 50px rgba(255,140,40,.18);
+    animation:breathe 5s ease-in-out infinite;
+  }
+  #sun:focus-visible .body{box-shadow:0 0 0 3px var(--teal),0 0 40px 8px rgba(255,180,60,.45)}
+
+  /* black hole */
+  .planet.fixed{position:absolute;animation:none;transform:translate(-50%,-50%)}
+  .bh .body{
+    background:#05030C;
+    box-shadow:0 0 0 2px rgba(255,255,255,.14), 0 0 34px 8px rgba(140,90,255,.4), inset 0 0 14px 5px #000;
+  }
+  .bh.on .body{box-shadow:0 0 0 2px var(--chalk), 0 0 40px 10px rgba(160,110,255,.6), inset 0 0 14px 5px #000}
+  .bh .disk{
+    position:absolute;left:50%;top:50%;
+    width:calc(var(--s) * 2);height:calc(var(--s) * 2);border-radius:50%;
+    background:conic-gradient(from 0deg, rgba(255,185,60,0), #FFC94A 18%, #FF6A00 36%, rgba(255,70,130,.9) 54%, rgba(130,70,255,.55) 74%, rgba(255,185,60,0) 100%);
+    -webkit-mask:radial-gradient(circle, transparent 33%, #000 38%, #000 70%, transparent 74%);
+            mask:radial-gradient(circle, transparent 33%, #000 38%, #000 70%, transparent 74%);
+    animation:disk 7s linear infinite;
+  }
+  @keyframes disk{
+    from{transform:translate(-50%,-50%) scaleY(.42) rotate(0deg)}
+    to  {transform:translate(-50%,-50%) scaleY(.42) rotate(360deg)}
+  }
+  body.paused .bh .disk{animation-play-state:paused}
+
+  /* galaxies */
+  .gx .body{
+    background:radial-gradient(circle, #FFF9E6 0%, var(--core) 28%, transparent 70%);
+    box-shadow:none;
+  }
+  .gx.on .body{box-shadow:0 0 0 2px var(--chalk)}
+  .gx .arms{
+    position:absolute;left:50%;top:50%;
+    width:calc(var(--s) * 1.9);height:calc(var(--s) * 1.9);border-radius:50%;
+    background:conic-gradient(from 0deg,
+      transparent 0deg, var(--arm) 55deg, transparent 145deg,
+      transparent 185deg, var(--arm2) 240deg, transparent 330deg);
+    filter:blur(7px);
+    -webkit-mask:radial-gradient(circle, #000 0%, #000 42%, rgba(0,0,0,.35) 66%, transparent 80%);
+            mask:radial-gradient(circle, #000 0%, #000 42%, rgba(0,0,0,.35) 66%, transparent 80%);
+    animation:galaxy var(--spin, 40s) linear infinite;
+  }
+  @keyframes galaxy{
+    from{transform:translate(-50%,-50%) scaleY(var(--tilt,.5)) rotate(0deg)}
+    to  {transform:translate(-50%,-50%) scaleY(var(--tilt,.5)) rotate(360deg)}
+  }
+
+  /* nebulae */
+  .neb .body{
+    background:radial-gradient(circle, rgba(255,255,255,.95) 0%, rgba(255,255,255,.35) 22%, transparent 58%);
+    box-shadow:none;
+  }
+  .neb.on .body{box-shadow:0 0 0 2px var(--chalk)}
+  .neb .cloud{
+    position:absolute;left:50%;top:50%;
+    width:calc(var(--s) * 2);height:calc(var(--s) * 1.7);
+    transform:translate(-50%,-50%);border-radius:50%;
+    background:
+      radial-gradient(circle at 34% 38%, var(--c1) 0%, transparent 58%),
+      radial-gradient(circle at 68% 62%, var(--c2) 0%, transparent 58%),
+      radial-gradient(circle at 52% 48%, var(--c3) 0%, transparent 70%);
+    filter:blur(10px);
+    animation:drift 9s ease-in-out infinite alternate;
+  }
+  @keyframes drift{
+    from{transform:translate(-50%,-50%) scale(1) rotate(-4deg);opacity:.85}
+    to  {transform:translate(-50%,-50%) scale(1.1) rotate(5deg);opacity:1}
+  }
+  body.paused .gx .arms,body.paused .neb .cloud{animation-play-state:paused}
+
+
+  /* rocket + rider */
+  .rocket{
+    position:absolute;left:50%;top:50%;pointer-events:none;z-index:5;
+    font-size:30px;line-height:1;
+    filter:drop-shadow(0 0 8px rgba(87,217,196,.55));
+    animation:launch 5s cubic-bezier(.22,.68,.26,1) forwards;
+  }
+  .rocket .ship{display:block;transform:rotate(-45deg)}
+  .rocket .flame{
+    position:absolute;left:50%;top:88%;width:8px;height:26px;margin-left:-4px;
+    border-radius:0 0 6px 6px;
+    background:linear-gradient(180deg,#FFD36B,#FF8A2B 45%,rgba(255,80,20,0));
+    animation:flicker .12s steps(2) infinite, burnout 5s linear forwards;
+  }
+  .boy{
+    position:absolute;left:50%;top:50%;pointer-events:none;z-index:6;
+    font-size:19px;line-height:1;
+    animation:ride 5s cubic-bezier(.22,.68,.26,1) forwards;
+  }
+  @keyframes launch{
+    0%  {transform:translate(-50%, 330px) scale(.45);opacity:0}
+    6%  {opacity:1}
+    28% {transform:translate(-50%, calc(var(--s) / -2 - 20px)) scale(1)}
+    34% {transform:translate(-50%, calc(var(--s) / -2 - 42px)) scale(1)}
+    40% {transform:translate(-50%, calc(var(--s) / -2 - 18px)) scale(1)}
+    92% {transform:translate(-50%, calc(var(--s) / -2 - 18px)) scale(1);opacity:1}
+    100%{transform:translate(-50%, calc(var(--s) / -2 - 18px)) scale(1);opacity:0}
+  }
+  @keyframes ride{
+    0%  {transform:translate(-50%, 326px) scale(.4);opacity:0}
+    6%  {opacity:1}
+    28% {transform:translate(-50%, calc(var(--s) / -2 - 46px)) scale(.85)}
+    34% {transform:translate(-50%, calc(var(--s) / -2 - 68px)) scale(.85)}
+    40% {transform:translate(-50%, calc(var(--s) / -2 - 44px)) scale(.85)}
+    48% {transform:translate(calc(-50% + 10px), calc(var(--s) / -2 - 32px)) scale(.85)}
+    56% {transform:translate(calc(-50% + 19px), calc(var(--s) / -2 - 18px)) scale(.9)}
+    62% {transform:translate(calc(-50% + 23px), calc(var(--s) / -2 - 7px)) scale(.95)}
+    70% {transform:translate(calc(-50% + 23px), calc(var(--s) / -2 - 11px)) scale(.95)}
+    78%,92%{transform:translate(calc(-50% + 23px), calc(var(--s) / -2 - 7px)) scale(.95);opacity:1}
+    100%{transform:translate(calc(-50% + 23px), calc(var(--s) / -2 - 7px)) scale(.95);opacity:0}
+  }
+  @keyframes flicker{50%{transform:scaleY(.62) scaleX(1.25)}}
+  @keyframes burnout{0%,26%{opacity:.95}36%{opacity:0}100%{opacity:0}}
+
+  /* zoom */
+  #zoom{
+    position:absolute;right:10px;bottom:calc(env(safe-area-inset-bottom) + 14px);z-index:4;display:flex;flex-direction:column;gap:8px;
+  }
+  #zoom button{
+    width:44px;height:44px;border-radius:50%;font-size:20px;line-height:1;
+    border:1px solid rgba(232,176,75,.35);background:rgba(11,6,32,.72);color:var(--chalk);
+    display:grid;place-items:center;cursor:pointer;
+  }
+
+  /* speaking ripple */
+  .ripple{
+    position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;
+    border-radius:50%;border:2px solid var(--teal);pointer-events:none;
+    animation:ping .9s ease-out forwards;
+  }
+
+  @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+  .planet{animation-name:spinSelf}
+  @keyframes spinSelf{to{transform:rotate(-360deg)}}
+  @keyframes ping{to{width:120px;height:120px;margin:-60px 0 0 -60px;opacity:0}}
+  @keyframes breathe{50%{filter:brightness(1.12)}}
+  body.paused .orbit,body.paused .planet,body.paused #sun .body{animation-play-state:paused}
+
+  @media (prefers-reduced-motion: reduce){
+    .orbit,.planet,#sun .body{animation:none !important}
+    .ripple{animation-duration:.01s}
+  }
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+
+<header>
+  <div class="wordmark">
+    <h1>Orrery</h1>
+    <p id="subtitle">Tap a world · hear its name</p>
+  </div>
+  <button class="tog" id="fsBtn" aria-pressed="false" title="Fullscreen">⛶</button>
+  <button class="tog" id="voiceBtn" aria-pressed="true" title="Voice on or off">🔊</button>
+  <button class="tog" id="pauseBtn" aria-pressed="false" title="Pause or play orbits">⏸</button>
+</header>
+
+<div id="nameRow">
+  <label for="who">Who is playing</label>
+  <input id="who" type="text" maxlength="24" autocomplete="off" autocapitalize="words"
+         spellcheck="false" placeholder="Rakesh, Jaisvik…">
+</div>
+
+<div id="stageWrap">
+  <div id="stage">
+    <button id="sun" aria-label="Sun"><div class="body"></div></button>
+  </div>
+  <div id="zoom">
+    <button id="zin" aria-label="Zoom in">+</button>
+    <button id="zout" aria-label="Zoom out">−</button>
+  </div>
+</div>
+
+
+<script>
+/* ---------------- data ---------------- */
+const WORLDS = [
+  { id:"sun", name:"Sun", article:"the ", kind:"Star · centre of the system",
+    fill:"radial-gradient(circle at 38% 34%,#FFF3C4,#FFC94A 45%,#F08A1D 75%,#C4470E)", halo:"#FFB93C",
+    dist:"—", year:"—", moons:"—",
+    fact:"Everything here circles the Sun. A million Earths could fit inside it." },
+  { id:"mercury", name:"Mercury", kind:"Planet 1 · smallest",
+    s:20, r:92, dur:6, fill:"linear-gradient(150deg,#B9A99A,#6E6156)", halo:"#B9A99A",
+    dist:"58 M km", year:"88 days", moons:"0",
+    fact:"The fastest planet, and the closest to the Sun. Days are scorching, nights are freezing." },
+  { id:"venus", name:"Venus", kind:"Planet 2 · hottest",
+    s:28, r:134, dur:9, fill:"linear-gradient(150deg,#F2D8A0,#C98B3E)", halo:"#F2D8A0",
+    dist:"108 M km", year:"225 days", moons:"0",
+    fact:"Wrapped in thick clouds that trap heat. Hot enough to melt lead." },
+  { id:"earth", name:"Earth", kind:"Planet 3 · home",
+    s:30, r:180, dur:12, fill:"linear-gradient(150deg,#5AC8F5,#2E7D4F 55%,#1B4F72)", halo:"#5AC8F5",
+    dist:"150 M km", year:"365 days", moons:"1",
+    fact:"The only world we know with oceans, air and life. That is where you are right now." },
+  { id:"mars", name:"Mars", kind:"Planet 4 · the red one",
+    s:24, r:226, dur:16, fill:"linear-gradient(150deg,#E1704A,#8C3A20)", halo:"#E1704A",
+    dist:"228 M km", year:"687 days", moons:"2",
+    fact:"Rusty red dust, giant volcanoes, and robots rolling around taking pictures." },
+  { id:"jupiter", name:"Jupiter", kind:"Planet 5 · biggest",
+    s:52, r:288, dur:26, fill:"repeating-linear-gradient(170deg,#E8C79A 0 5px,#C79267 5px 9px,#9E6B4A 9px 13px)", halo:"#E8C79A",
+    dist:"778 M km", year:"12 years", moons:"95",
+    fact:"A giant ball of gas with a storm bigger than Earth that has raged for centuries." },
+  { id:"saturn", name:"Saturn", kind:"Planet 6 · the ringed one",
+    s:44, r:352, dur:34, ring:true, fill:"linear-gradient(150deg,#F0DCA8,#C2A063)", halo:"#F0DCA8",
+    dist:"1.4 B km", year:"29 years", moons:"146",
+    fact:"Its rings are billions of pieces of ice and rock, some as small as a grain of sugar." },
+  { id:"uranus", name:"Uranus", kind:"Planet 7 · tilted",
+    s:40, r:410, dur:44, fill:"linear-gradient(150deg,#A6E7E6,#4E9FA8)", halo:"#A6E7E6",
+    dist:"2.9 B km", year:"84 years", moons:"28",
+    fact:"It rolls around the Sun on its side, like a ball tipped over." },
+  { id:"neptune", name:"Neptune", kind:"Planet 8 · windiest",
+    s:38, r:452, dur:54, fill:"linear-gradient(150deg,#6E8FE8,#27407F)", halo:"#6E8FE8",
+    dist:"4.5 B km", year:"165 years", moons:"16",
+    fact:"The farthest planet, dark blue and swept by the fastest winds in the solar system." },
+  /* --- deep space: parked around the rim, not to scale or in real positions --- */
+  { id:"blackhole", name:"Black Hole", article:"a ", kind:"Deep space", shape:"bh",
+    s:70, fixed:true, x:203, y:203, halo:"#8C5AFF",
+    fact:"Gravity so strong that nothing escapes it, not even light. The glowing ring is gas falling in." },
+
+  { id:"orion", name:"Orion Nebula", article:"the ", kind:"Nebula", shape:"neb",
+    s:88, fixed:true, x:560, y:70, halo:"#FF8FB8",
+    vars:{ "--c1":"rgba(255,120,180,.75)", "--c2":"rgba(90,200,245,.65)", "--c3":"rgba(255,205,120,.5)" },
+    fact:"A huge cloud of gas and dust where brand new stars are being born right now." },
+
+  { id:"andromeda", name:"Andromeda Galaxy", article:"the ", kind:"Galaxy", shape:"gx",
+    s:86, fixed:true, x:917, y:203, halo:"#BFD4FF",
+    vars:{ "--core":"#FFE7B0", "--arm":"rgba(200,220,255,.62)", "--arm2":"rgba(255,235,205,.5)", "--spin":"52s", "--tilt":".38" },
+    fact:"Our closest big neighbour galaxy. It is rushing towards us and will meet the Milky Way one day." },
+
+  { id:"milkyway", name:"Milky Way", article:"the ", kind:"Galaxy", shape:"gx",
+    s:92, fixed:true, x:917, y:917, halo:"#CFE0FF",
+    vars:{ "--core":"#FFDE9E", "--arm":"rgba(214,226,255,.62)", "--arm2":"rgba(236,224,255,.55)", "--spin":"40s", "--tilt":".5" },
+    fact:"A giant spinning city of stars. The Sun and all the planets are one tiny dot inside it." },
+
+  { id:"whirlpool", name:"Whirlpool Galaxy", article:"the ", kind:"Galaxy", shape:"gx",
+    s:80, fixed:true, x:560, y:1050, halo:"#9FC0FF",
+    vars:{ "--core":"#FFF0C8", "--arm":"rgba(150,190,255,.7)", "--arm2":"rgba(255,160,200,.45)", "--spin":"30s", "--tilt":".78" },
+    fact:"A galaxy shaped like a swirl of cream, with a smaller galaxy hanging on the end of one arm." },
+
+  { id:"crab", name:"Crab Nebula", article:"the ", kind:"Nebula", shape:"neb",
+    s:82, fixed:true, x:203, y:917, halo:"#7FE0C8",
+    vars:{ "--c1":"rgba(120,235,200,.7)", "--c2":"rgba(255,150,90,.6)", "--c3":"rgba(190,150,255,.5)" },
+    fact:"The glowing leftovers of a star that exploded long ago. People on Earth saw it happen a thousand years back." }
+];
+
+let voiceOn = true;
+let current = WORLDS[0];
+
+/* ---------------- build the orrery ---------------- */
+const stage = document.getElementById("stage");
+
+/* A planet keeps orbiting under the finger, so a plain click can miss it.
+   Capturing the pointer pins the press and the release to the same planet. */
+function bindTap(el, id){
+  el.addEventListener("pointerdown", e => {
+    try { el.setPointerCapture(e.pointerId); } catch (_) {}
+  });
+  el.addEventListener("pointerup", () => { if (!dragged) select(id); });
+  el.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " "){ e.preventDefault(); select(id); }
+  });
+}
+
+WORLDS.forEach(w => {
+  if (w.fixed) {
+    const btn = document.createElement("button");
+    btn.className = "planet fixed " + w.shape;
+    btn.dataset.id = w.id;
+    btn.style.cssText = `--s:${w.s}px;--halo:${w.halo};left:${w.x}px;top:${w.y}px`;
+    if (w.vars) for (const [k, v] of Object.entries(w.vars)) btn.style.setProperty(k, v);
+    btn.setAttribute("aria-label", w.name);
+    const halo = w.shape === "gx"  ? '<div class="arms"></div>'
+               : w.shape === "neb" ? '<div class="cloud"></div>'
+               :                     '<div class="disk"></div>';
+    btn.innerHTML = `${halo}<div class="body"></div><div class="tag">${w.name}</div>`;
+    bindTap(btn, w.id);
+    stage.appendChild(btn);
+  } else if (w.id !== "sun") {
+    const orbit = document.createElement("div");
+    orbit.className = "orbit";
+    orbit.style.cssText = `width:${w.r*2}px;height:${w.r*2}px;--dur:${w.dur}s`;
+    orbit.dataset.id = w.id;
+
+    const peg = document.createElement("div");
+    peg.className = "peg";
+
+    const btn = document.createElement("button");
+    btn.className = "planet";
+    btn.dataset.id = w.id;
+    btn.style.cssText = `--dur:${w.dur}s;--s:${w.s}px;--fill:${w.fill};--halo:${w.halo}`;
+    btn.setAttribute("aria-label", w.name);
+    btn.innerHTML = `${w.ring ? '<div class="ring"></div>' : ''}<div class="body"></div><div class="tag">${w.name}</div>`;
+    bindTap(btn, w.id);
+
+    peg.appendChild(btn);
+    orbit.appendChild(peg);
+    stage.appendChild(orbit);
+  }
+
+});
+
+bindTap(document.getElementById("sun"), "sun");
+
+/* ---------------- speech ---------------- */
+let voices = [];
+function loadVoices(){ voices = speechSynthesis.getVoices() || []; }
+loadVoices();
+if ("onvoiceschanged" in speechSynthesis) speechSynthesis.onvoiceschanged = loadVoices;
+
+function pickVoice(){
+  const en = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith("en"));
+  return en.find(v => /en[-_]in/i.test(v.lang))   // Indian English if present
+      || en.find(v => /en[-_](gb|us)/i.test(v.lang))
+      || en[0] || null;
+}
+
+function say(text, interrupt = true){
+  if (!voiceOn || !("speechSynthesis" in window)) return;
+  if (interrupt) speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "en-IN";
+  const v = pickVoice();
+  if (v) u.voice = v;
+  u.rate = 0.85; u.pitch = 1.05;
+  speechSynthesis.speak(u);
+}
+
+/* ---------------- what gets said ---------------- */
+const whoInput = document.getElementById("who");
+
+function travelLine(w){
+  const label = (w.article || "") + w.name;
+  const who = whoInput.value.trim().replace(/\s+/g, " ");
+  return who ? `${who}, now we are travelling to ${label}.` : `Now we are travelling to ${label}.`;
+}
+
+function factLine(w){
+  const bits = [`We have landed on ${(w.article || "") + w.name}.`, w.fact];
+  if (w.moons && w.moons !== "—") bits.push(w.moons === "0" ? "It has no moons at all." : `It has ${w.moons} moons.`);
+  if (w.year && w.year !== "—") bits.push(`One trip around the Sun takes ${w.year}.`);
+  return bits.join(" ");
+}
+
+/* Says the travel line now and the facts once the rocket has landed. */
+let trip = 0;
+function narrate(w){
+  const t = ++trip;
+  say(travelLine(w));
+  setTimeout(() => { if (t === trip) say(factLine(w), false); }, 2200);
+}
+
+/* ---------------- selection ---------------- */
+function select(id){
+  const w = WORLDS.find(x => x.id === id);
+  if (!w) return;
+  current = w;
+
+  document.querySelectorAll(".planet,.orbit").forEach(el => el.classList.remove("on"));
+  document.querySelectorAll(`[data-id="${id}"]`).forEach(el => el.classList.add("on"));
+
+  const host = id === "sun" ? document.getElementById("sun") : document.querySelector(`.planet[data-id="${id}"]`);
+  const r = document.createElement("div");
+  r.className = "ripple";
+  host.appendChild(r);
+  setTimeout(() => r.remove(), 950);
+
+  host.querySelectorAll(".rocket,.boy").forEach(el => el.remove());
+  const rocket = document.createElement("div");
+  rocket.className = "rocket";
+  rocket.innerHTML = '<span class="ship">🚀</span><span class="flame"></span>';
+  const boy = document.createElement("div");
+  boy.className = "boy";
+  boy.textContent = "👦";
+  host.appendChild(rocket);
+  host.appendChild(boy);
+  setTimeout(() => { rocket.remove(); boy.remove(); }, 5100);
+
+  if (navigator.vibrate) navigator.vibrate(12);
+
+  document.getElementById("subtitle").textContent = w.name;
+
+  bringIntoView(host);
+
+  narrate(w);
+}
+
+/* Keeps the tapped world on screen when the map is zoomed or panned. */
+function bringIntoView(el){
+  const w = wrap.getBoundingClientRect(), p = el.getBoundingClientRect();
+  const px = p.left + p.width / 2, py = p.top + p.height / 2;
+  const pad = 70;
+  const inside = px > w.left + pad && px < w.right - pad && py > w.top + pad && py < w.bottom - pad;
+  if (inside) return;
+  tx += (w.left + w.width / 2) - px;
+  ty += (w.top + w.height / 2) - py;
+  stage.style.transition = "transform .45s ease";
+  apply();
+  setTimeout(() => { stage.style.transition = ""; }, 500);
+}
+
+whoInput.addEventListener("keydown", e => { if (e.key === "Enter") whoInput.blur(); });
+
+/* ---------------- controls ---------------- */
+const fsBtn = document.getElementById("fsBtn");
+const root = document.documentElement;
+const canFS = !!(root.requestFullscreen || root.webkitRequestFullscreen);
+
+function fsOn(){ return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+
+fsBtn.addEventListener("click", async () => {
+  try {
+    if (canFS && !fsOn()){
+      await (root.requestFullscreen ? root.requestFullscreen({ navigationUI: "hide" }) : root.webkitRequestFullscreen());
+    } else if (canFS){
+      await (document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen());
+    } else {
+      document.body.classList.toggle("fs");   // no API: just hide the chrome
+      syncFS();
+    }
+  } catch (_) {
+    document.body.classList.toggle("fs");
+    syncFS();
+  }
+});
+
+function syncFS(){
+  const on = canFS ? fsOn() : document.body.classList.contains("fs");
+  document.body.classList.toggle("fs", on);
+  fsBtn.textContent = on ? "⤡" : "⛶";
+  fsBtn.setAttribute("aria-pressed", on);
+  setTimeout(fit, 120);
+}
+["fullscreenchange","webkitfullscreenchange"].forEach(ev => document.addEventListener(ev, syncFS));
+
+const voiceBtn = document.getElementById("voiceBtn");
+voiceBtn.addEventListener("click", () => {
+  voiceOn = !voiceOn;
+  voiceBtn.textContent = voiceOn ? "🔊" : "🔇";
+  voiceBtn.setAttribute("aria-pressed", voiceOn);
+  if (!voiceOn) speechSynthesis.cancel();
+});
+
+const pauseBtn = document.getElementById("pauseBtn");
+pauseBtn.addEventListener("click", () => {
+  const paused = document.body.classList.toggle("paused");
+  pauseBtn.textContent = paused ? "▶" : "⏸";
+  pauseBtn.setAttribute("aria-pressed", paused);
+});
+
+/* ---------------- fit, zoom, pan ---------------- */
+const wrap = document.getElementById("stageWrap");
+const STAGE = 1120;
+let zoom = 1, tx = 0, ty = 0, dragged = false;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+function baseFit(){
+  return Math.min(wrap.clientWidth, wrap.clientHeight) / STAGE;
+}
+function apply(){
+  const span = STAGE * baseFit() * zoom;
+  const limit = Math.max(0, span / 2);
+  tx = clamp(tx, -limit, limit);
+  ty = clamp(ty, -limit, limit);
+  stage.style.setProperty("--fit", Math.max(0.3, baseFit() * zoom));
+  stage.style.setProperty("--tx", tx + "px");
+  stage.style.setProperty("--ty", ty + "px");
+}
+function fit(){ apply(); }
+
+document.getElementById("zin").addEventListener("click", () => { zoom = clamp(zoom * 1.25, 0.5, 3.5); apply(); });
+document.getElementById("zout").addEventListener("click", () => { zoom = clamp(zoom / 1.25, 0.5, 3.5); apply(); });
+
+const pts = new Map();
+let panFrom = null, lastGap = 0;
+const gap = () => {
+  const [a, b] = [...pts.values()];
+  return Math.hypot(a.x - b.x, a.y - b.y);
+};
+
+wrap.addEventListener("pointerdown", e => {
+  pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  dragged = false;
+  if (pts.size === 1) panFrom = { x: e.clientX, y: e.clientY, tx, ty };
+  if (pts.size === 2) lastGap = gap();
+});
+wrap.addEventListener("pointermove", e => {
+  if (!pts.has(e.pointerId)) return;
+  pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pts.size === 1 && panFrom){
+    const dx = e.clientX - panFrom.x, dy = e.clientY - panFrom.y;
+    if (Math.hypot(dx, dy) > 16) dragged = true;
+    if (dragged){ tx = panFrom.tx + dx; ty = panFrom.ty + dy; apply(); }
+  } else if (pts.size === 2){
+    const g = gap();
+    if (lastGap) { zoom = clamp(zoom * (g / lastGap), 0.5, 3.5); apply(); }
+    lastGap = g;
+    dragged = true;
+  }
+});
+["pointerup","pointercancel","pointerleave"].forEach(ev =>
+  wrap.addEventListener(ev, e => {
+    pts.delete(e.pointerId);
+    if (pts.size < 2) lastGap = 0;
+    if (pts.size === 0) panFrom = null;
+  })
+);
+
+addEventListener("resize", fit);
+addEventListener("orientationchange", () => setTimeout(fit, 120));
+fit();
+
+/* ---------------- starfield ---------------- */
+const cv = document.getElementById("stars"), cx = cv.getContext("2d");
+let stars = [];
+function seed(){
+  const d = devicePixelRatio || 1;
+  cv.width = innerWidth * d; cv.height = innerHeight * d;
+  cv.style.width = innerWidth + "px"; cv.style.height = innerHeight + "px";
+  cx.setTransform(d, 0, 0, d, 0, 0);
+  stars = Array.from({length: Math.round(innerWidth * innerHeight / 5200)}, () => ({
+    x: Math.random() * innerWidth, y: Math.random() * innerHeight,
+    r: Math.random() * 1.3 + .3, a: Math.random(), sp: Math.random() * .012 + .003
+  }));
+}
+function twinkle(){
+  cx.clearRect(0, 0, innerWidth, innerHeight);
+  for (const s of stars){
+    s.a += s.sp; const o = .35 + Math.abs(Math.sin(s.a)) * .6;
+    cx.beginPath(); cx.arc(s.x, s.y, s.r, 0, 6.284);
+    cx.fillStyle = `rgba(242,236,228,${o})`; cx.fill();
+  }
+  requestAnimationFrame(twinkle);
+}
+seed(); twinkle();
+addEventListener("resize", seed);
+</script>
+</body>
+</html>

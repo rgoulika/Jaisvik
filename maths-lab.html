@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Maths Lab — Add, Subtract, Multiply, Divide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16233D;
+  --ink-soft:#5B6B85;
+  --paper:#EEF4FB;
+  --grid:#D3E2F2;
+  --card:#FFFFFF;
+  --add:#1F9D55;
+  --sub:#EE8B00;
+  --mul:#6C4BD6;
+  --div:#E14B5A;
+  --cell:34px;
+  --radius:16px;
+  --shadow:0 2px 0 rgba(22,35,61,.10), 0 10px 24px -14px rgba(22,35,61,.45);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color:var(--ink);
+  background-color:var(--paper);
+  background-image:
+    repeating-linear-gradient(to right, var(--grid) 0 1px, transparent 1px 22px),
+    repeating-linear-gradient(to bottom, var(--grid) 0 1px, transparent 1px 22px);
+  -webkit-text-size-adjust:100%;
+  padding:0 0 64px;
+}
+.wrap{max-width:660px;margin:0 auto;padding:20px 16px 0}
+
+/* ---------- header ---------- */
+header{margin:8px 0 18px}
+.eyebrow{
+  font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+  font-weight:800;color:var(--ink-soft);margin:0 0 4px
+}
+h1{
+  font-family:"Fredoka",system-ui,sans-serif;
+  font-weight:600;font-size:38px;line-height:1;margin:0;letter-spacing:-.01em;
+}
+h1 .glyphs{display:inline-flex;gap:6px;margin-left:10px;vertical-align:6px}
+h1 .glyphs i{
+  font-style:normal;font-size:17px;width:26px;height:26px;border-radius:9px;
+  display:grid;place-items:center;color:#fff;font-family:"Fredoka",sans-serif;
+}
+.g-add{background:var(--add)} .g-sub{background:var(--sub)}
+.g-mul{background:var(--mul)} .g-div{background:var(--div)}
+
+/* ---------- tabs ---------- */
+.tabs{display:flex;gap:6px;background:var(--card);padding:5px;border-radius:14px;
+  box-shadow:var(--shadow);margin-bottom:18px}
+.tab{
+  flex:1;border:0;background:transparent;padding:11px 8px;border-radius:10px;cursor:pointer;
+  font-family:"Fredoka",sans-serif;font-size:16px;font-weight:500;color:var(--ink-soft);
+}
+.tab[aria-selected="true"]{background:var(--ink);color:#fff}
+.tab:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #7AA7FF;outline-offset:2px}
+
+/* ---------- cards ---------- */
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+.card h2{font-family:"Fredoka",sans-serif;font-weight:500;font-size:15px;margin:0 0 12px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+
+/* ---------- op tiles ---------- */
+.ops{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.op-tile{
+  border:2px solid transparent;background:#F1F5FA;border-radius:14px;padding:14px 0;cursor:pointer;
+  font-family:"Fredoka",sans-serif;font-size:26px;color:var(--ink-soft);line-height:1;
+  transition:transform .12s ease, background .12s ease, color .12s ease;
+}
+.op-tile small{display:block;font-family:"Nunito",sans-serif;font-size:10px;font-weight:800;
+  letter-spacing:.08em;text-transform:uppercase;margin-top:6px}
+.op-tile:hover{transform:translateY(-2px)}
+.op-tile[aria-pressed="true"]{color:#fff}
+.op-tile[data-op="+"][aria-pressed="true"]{background:var(--add)}
+.op-tile[data-op="-"][aria-pressed="true"]{background:var(--sub)}
+.op-tile[data-op="×"][aria-pressed="true"]{background:var(--mul)}
+.op-tile[data-op="÷"][aria-pressed="true"]{background:var(--div)}
+
+/* ---------- number entry ---------- */
+.entry{display:flex;align-items:center;gap:10px;margin:16px 0 4px}
+.entry input{
+  flex:1;min-width:0;font-family:"Fredoka",sans-serif;font-size:30px;text-align:center;
+  padding:12px 6px;border:2px solid var(--grid);border-radius:12px;background:#FBFDFF;color:var(--ink);
+}
+.entry .sign{font-family:"Fredoka",sans-serif;font-size:28px;width:34px;text-align:center;flex:none}
+.hint{font-size:13px;color:var(--ink-soft);margin:10px 2px 0}
+
+.btn{
+  width:100%;border:0;border-radius:12px;padding:14px;cursor:pointer;
+  font-family:"Fredoka",sans-serif;font-size:18px;font-weight:500;color:#fff;background:var(--ink);
+  transition:transform .12s ease, filter .12s ease;
+}
+.btn:hover{filter:brightness(1.12)} .btn:active{transform:translateY(1px)}
+.btn.ghost{background:#EDF2F8;color:var(--ink)}
+.btn.slim{width:auto;padding:10px 18px;font-size:15px}
+.row-btns{display:flex;gap:8px;margin-top:12px}
+.row-btns .btn{flex:1}
+
+/* ---------- answer + working pad ---------- */
+.answer{
+  margin-top:16px;padding:16px;border-radius:14px;background:#F1F5FA;text-align:center;
+}
+.answer .label{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+.answer .value{font-family:"Fredoka",sans-serif;font-size:44px;line-height:1.1;margin-top:4px;word-break:break-all}
+.answer .extra{font-size:14px;color:var(--ink-soft);margin-top:2px}
+
+.pad{
+  margin-top:14px;padding:16px 10px;border-radius:14px;overflow-x:auto;
+  background-color:#FCFDFF;
+  background-image:
+    repeating-linear-gradient(to right, #E4EDF7 0 1px, transparent 1px var(--cell)),
+    repeating-linear-gradient(to bottom, #E4EDF7 0 1px, transparent 1px var(--cell));
+  background-position:center top;
+}
+.prow{display:flex;justify-content:flex-end;align-items:center}
+.prow .op{
+  width:var(--cell);height:var(--cell);flex:none;display:grid;place-items:center;
+  font-family:"Fredoka",sans-serif;font-size:22px;color:var(--ink-soft)
+}
+.cells{display:flex}
+.cell{
+  width:var(--cell);height:var(--cell);flex:none;display:grid;place-items:center;
+  font-family:"Fredoka",sans-serif;font-size:23px;color:var(--ink)
+}
+.cell.small{font-size:13px;color:var(--ink-soft)}
+.rule{height:3px;border-radius:2px;background:var(--ink);margin:3px 0}
+.prow.total .cell{font-weight:600}
+.steps{margin:12px 0 0;padding:0 0 0 4px;list-style:none}
+.steps li{
+  font-size:15px;padding:7px 10px;border-left:3px solid var(--div);
+  background:#FBFDFF;border-radius:0 8px 8px 0;margin-bottom:6px;
+}
+.steps li b{font-family:"Fredoka",sans-serif;font-weight:500}
+.pad-title{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-soft);margin:0 0 8px 4px}
+
+/* ---------- practice ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{
+  border:2px solid var(--grid);background:#FBFDFF;border-radius:999px;padding:8px 15px;cursor:pointer;
+  font-family:"Nunito",sans-serif;font-weight:700;font-size:14px;color:var(--ink-soft);
+}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.field{margin-bottom:16px}
+.field > span{display:block;font-size:11px;font-weight:800;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-soft);margin-bottom:8px}
+
+.qbar{display:flex;justify-content:space-between;align-items:center;font-size:13px;
+  font-weight:800;color:var(--ink-soft);margin-bottom:10px}
+.track{height:7px;border-radius:4px;background:#E7EEF6;overflow:hidden;margin-bottom:18px}
+.track i{display:block;height:100%;background:var(--ink);width:0;transition:width .3s ease}
+.question{
+  font-family:"Fredoka",sans-serif;font-size:46px;text-align:center;line-height:1.2;margin:6px 0 14px;
+}
+.slot{
+  margin:0 auto 14px;width:190px;height:66px;border-radius:14px;border:3px dashed var(--grid);
+  display:grid;place-items:center;font-family:"Fredoka",sans-serif;font-size:34px;background:#FBFDFF;
+}
+.slot.ok{border-style:solid;border-color:var(--add);background:#EBF8F0;color:var(--add)}
+.slot.no{border-style:solid;border-color:var(--div);background:#FDEDEE;color:var(--div)}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.key{
+  border:0;background:#F1F5FA;border-radius:12px;padding:16px 0;cursor:pointer;
+  font-family:"Fredoka",sans-serif;font-size:24px;color:var(--ink);
+}
+.key:active{background:#E2EAF4}
+.key.wide{grid-column:span 1}
+.feedback{text-align:center;font-weight:800;min-height:24px;margin-bottom:8px}
+.feedback.ok{color:var(--add)} .feedback.no{color:var(--div)}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+
+.scorering{text-align:center;padding:8px 0 4px}
+.scorering .big{font-family:"Fredoka",sans-serif;font-size:60px;line-height:1}
+.scorering .sub{color:var(--ink-soft);font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0}
+.stat{background:#F1F5FA;border-radius:12px;padding:12px 8px;text-align:center}
+.stat b{display:block;font-family:"Fredoka",sans-serif;font-size:22px;font-weight:500}
+.stat span{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+.missed{border-top:2px solid #EDF2F8;padding-top:14px;margin-top:6px}
+.miss{background:#FBFDFF;border:2px solid #EDF2F8;border-radius:12px;padding:12px;margin-bottom:8px}
+.miss .line{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  font-family:"Fredoka",sans-serif;font-size:19px}
+.miss .yours{font-family:"Nunito",sans-serif;font-size:13px;font-weight:800;color:var(--div)}
+.miss button{margin-top:8px;border:0;background:#EDF2F8;border-radius:8px;padding:7px 12px;
+  font-weight:800;font-size:12px;cursor:pointer;color:var(--ink)}
+.hidden{display:none !important}
+@media (max-width:420px){
+  :root{--cell:28px}
+  h1{font-size:31px}
+  .question{font-size:38px}
+  .answer .value{font-size:36px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Practice pad for the four rules</p>
+  <h1>Maths Lab<span class="glyphs"><i class="g-add">+</i><i class="g-sub">−</i><i class="g-mul">×</i><i class="g-div">÷</i></span></h1>
+</header>
+
+<div class="tabs" role="tablist">
+  <button class="tab" id="tab-solve" role="tab" aria-selected="true" aria-controls="panel-solve">Solve a sum</button>
+  <button class="tab" id="tab-practice" role="tab" aria-selected="false" aria-controls="panel-practice">Practice</button>
+</div>
+
+<!-- ================= SOLVE ================= -->
+<section id="panel-solve" role="tabpanel" aria-labelledby="tab-solve">
+  <div class="card">
+    <h2>Pick an operation</h2>
+    <div class="ops">
+      <button class="op-tile" data-op="+" aria-pressed="true">+<small>Add</small></button>
+      <button class="op-tile" data-op="-" aria-pressed="false">−<small>Take away</small></button>
+      <button class="op-tile" data-op="×" aria-pressed="false">×<small>Times</small></button>
+      <button class="op-tile" data-op="÷" aria-pressed="false">÷<small>Share</small></button>
+    </div>
+
+    <div class="entry">
+      <input id="numA" inputmode="numeric" autocomplete="off" placeholder="0" aria-label="First number">
+      <span class="sign" id="signBox">+</span>
+      <input id="numB" inputmode="numeric" autocomplete="off" placeholder="0" aria-label="Second number">
+    </div>
+    <p class="hint" id="solveHint">Whole numbers up to 7 digits.</p>
+    <div class="row-btns">
+      <button class="btn" id="solveBtn">Solve it</button>
+      <button class="btn ghost" id="clearBtn" style="flex:0 0 90px">Clear</button>
+    </div>
+
+    <div id="solveOut" class="hidden"></div>
+  </div>
+</section>
+
+<!-- ================= PRACTICE ================= -->
+<section id="panel-practice" role="tabpanel" aria-labelledby="tab-practice" class="hidden">
+
+  <div class="card" id="setup">
+    <h2>Set up the practice</h2>
+    <div class="field">
+      <span>Operations</span>
+      <div class="chips" id="pOps">
+        <button class="chip" data-op="+" aria-pressed="true">+ Add</button>
+        <button class="chip" data-op="-" aria-pressed="true">− Subtract</button>
+        <button class="chip" data-op="×" aria-pressed="false">× Multiply</button>
+        <button class="chip" data-op="÷" aria-pressed="false">÷ Divide</button>
+      </div>
+    </div>
+    <div class="field">
+      <span>Level</span>
+      <div class="chips" id="pLevel">
+        <button class="chip" data-level="1" aria-pressed="true">Starter</button>
+        <button class="chip" data-level="2" aria-pressed="false">Steady</button>
+        <button class="chip" data-level="3" aria-pressed="false">Tricky</button>
+      </div>
+    </div>
+    <div class="field">
+      <span>How many questions</span>
+      <div class="chips" id="pCount">
+        <button class="chip" data-count="10" aria-pressed="true">10</button>
+        <button class="chip" data-count="20" aria-pressed="false">20</button>
+        <button class="chip" data-count="30" aria-pressed="false">30</button>
+      </div>
+    </div>
+    <p class="hint" id="bestLine"></p>
+    <button class="btn" id="startBtn" style="margin-top:12px">Start practice</button>
+  </div>
+
+  <div class="card hidden" id="quiz">
+    <div class="qbar">
+      <span id="qCount">Question 1 of 10</span>
+      <span id="qScore">0 correct</span>
+    </div>
+    <div class="track"><i id="qTrack"></i></div>
+    <div class="question" id="qText">1 + 1</div>
+    <div class="slot" id="qSlot">?</div>
+    <div class="feedback" id="qFeedback"></div>
+    <div class="keys">
+      <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button><button class="key" data-k="3">3</button>
+      <button class="key" data-k="4">4</button><button class="key" data-k="5">5</button><button class="key" data-k="6">6</button>
+      <button class="key" data-k="7">7</button><button class="key" data-k="8">8</button><button class="key" data-k="9">9</button>
+      <button class="key" data-k="del">⌫</button><button class="key" data-k="0">0</button><button class="key" data-k="go">✓</button>
+    </div>
+    <button class="btn ghost" id="quitBtn" style="margin-top:12px">End practice</button>
+  </div>
+
+  <div class="card hidden" id="results"></div>
+</section>
+
+<p class="hint" style="text-align:center">Tip: after any sum, tap <b>Show me how</b> to see it written out in columns.</p>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------- helpers ---------------- */
+const $ = function(id){ return document.getElementById(id); };
+const digits = function(n){ return String(n).split(""); };
+const padLeft = function(s, w){ return " ".repeat(Math.max(0, w - s.length)) + s; };
+
+function cells(str, cls){
+  return '<span class="cells">' + str.split("").map(function(ch){
+    return '<span class="cell ' + (cls||"") + '">' + (ch === " " ? "" : ch) + '</span>';
+  }).join("") + '</span>';
+}
+function row(opSign, str, cls, rowCls){
+  return '<div class="prow ' + (rowCls||"") + '"><span class="op">' + (opSign||"") + '</span>'
+       + cells(str, cls) + '</div>';
+}
+function rule(width){
+  const px = 'calc(var(--cell) * ' + (width + 1) + ')';
+  return '<div class="prow"><div class="rule" style="width:' + px + '"></div></div>';
+}
+
+/* ---------------- working-out builders ---------------- */
+function workAdd(a, b){
+  const res = a + b;
+  const w = String(res).length;
+  const A = padLeft(String(a), w), B = padLeft(String(b), w);
+  let carry = 0, carryRow = new Array(w).fill(" ");
+  for (let i = w - 1; i >= 0; i--){
+    const da = A[i] === " " ? 0 : +A[i];
+    const db = B[i] === " " ? 0 : +B[i];
+    const sum = da + db + carry;
+    carry = sum >= 10 ? 1 : 0;
+    if (carry && i > 0) carryRow[i - 1] = "1";
+  }
+  return row("", carryRow.join(""), "small")
+       + row("", A)
+       + row("+", B)
+       + rule(w)
+       + row("", padLeft(String(res), w), "", "total");
+}
+
+function workSub(a, b){
+  const res = a - b;
+  const w = String(a).length;
+  const A = padLeft(String(a), w), B = padLeft(String(b), w);
+  let arr = A.split("").map(function(c){ return c === " " ? 0 : +c; });
+  let topRow = new Array(w).fill(" ");
+  let changed = false;
+  for (let i = w - 1; i >= 0; i--){
+    const db = B[i] === " " ? 0 : +B[i];
+    if (arr[i] < db){
+      let j = i - 1;
+      while (j >= 0 && arr[j] === 0){ arr[j] = 9; topRow[j] = "9"; j--; changed = true; }
+      if (j >= 0){ arr[j] -= 1; topRow[j] = String(arr[j]); changed = true; }
+      arr[i] += 10; topRow[i] = String(arr[i]);
+    }
+  }
+  let out = "";
+  if (changed) out += row("", topRow.join(""), "small");
+  out += row("", A) + row("−", B) + rule(w) + row("", padLeft(String(res), w), "", "total");
+  return out;
+}
+
+function workMul(a, b){
+  const res = a * b;
+  const bd = digits(b);
+  const w = Math.max(String(res).length, String(a).length + 1);
+  let out = row("", padLeft(String(a), w)) + row("×", padLeft(String(b), w)) + rule(w);
+  if (bd.length > 1){
+    for (let i = bd.length - 1; i >= 0; i--){
+      const place = bd.length - 1 - i;
+      const part = a * (+bd[i]) * Math.pow(10, place);
+      if (part === 0) continue;
+      out += row("", padLeft(String(part), w), "small");
+    }
+    out += rule(w);
+  }
+  out += row("", padLeft(String(res), w), "", "total");
+  return out;
+}
+
+function workDiv(a, b){
+  const q = Math.floor(a / b), r = a % b;
+  const ad = digits(a);
+  let cur = 0, steps = "", got = false;
+  for (let i = 0; i < ad.length; i++){
+    cur = cur * 10 + (+ad[i]);
+    const part = Math.floor(cur / b);
+    if (part === 0 && !got) { continue; }
+    got = true;
+    steps += '<li>Bring down <b>' + ad[i] + '</b> → <b>' + cur + ' ÷ ' + b + ' = ' + part
+           + '</b>, remainder <b>' + (cur - part * b) + '</b></li>';
+    cur = cur - part * b;
+  }
+  if (!got) steps = '<li><b>' + a + '</b> is smaller than <b>' + b + '</b>, so the answer is <b>0</b> remainder <b>' + a + '</b></li>';
+  const head = '<div class="prow"><span class="op">÷</span>' + cells(String(b))
+             + '<span class="cell">)</span>' + cells(String(a)) + '</div>'
+             + '<div class="prow" style="justify-content:center;margin-top:6px">'
+             + '<span class="cell" style="width:auto;font-size:15px;color:var(--ink-soft)">answer '
+             + q + (r ? ' remainder ' + r : '') + '</span></div>';
+  return head + '<ul class="steps">' + steps + '</ul>';
+}
+
+function buildWorking(a, b, op){
+  if (op === "+") return workAdd(a, b);
+  if (op === "-") return workSub(a, b);
+  if (op === "×") return workMul(a, b);
+  return workDiv(a, b);
+}
+
+function compute(a, b, op){
+  if (op === "+") return a + b;
+  if (op === "-") return a - b;
+  if (op === "×") return a * b;
+  return Math.floor(a / b);
+}
+
+/* ---------------- tabs ---------------- */
+const tabSolve = $("tab-solve"), tabPractice = $("tab-practice");
+const panelSolve = $("panel-solve"), panelPractice = $("panel-practice");
+function selectTab(which){
+  const solve = which === "solve";
+  tabSolve.setAttribute("aria-selected", solve);
+  tabPractice.setAttribute("aria-selected", !solve);
+  panelSolve.classList.toggle("hidden", !solve);
+  panelPractice.classList.toggle("hidden", solve);
+}
+tabSolve.addEventListener("click", function(){ selectTab("solve"); });
+tabPractice.addEventListener("click", function(){ selectTab("practice"); });
+
+/* ---------------- solve mode ---------------- */
+let solveOp = "+";
+const signBox = $("signBox"), numA = $("numA"), numB = $("numB");
+const solveOut = $("solveOut"), solveHint = $("solveHint");
+
+document.querySelectorAll(".op-tile").forEach(function(t){
+  t.addEventListener("click", function(){
+    document.querySelectorAll(".op-tile").forEach(function(x){ x.setAttribute("aria-pressed","false"); });
+    t.setAttribute("aria-pressed","true");
+    solveOp = t.dataset.op;
+    signBox.textContent = solveOp === "-" ? "−" : solveOp;
+    solveOut.classList.add("hidden");
+  });
+});
+
+[numA, numB].forEach(function(inp){
+  inp.addEventListener("input", function(){
+    inp.value = inp.value.replace(/[^0-9]/g, "").slice(0, 7);
+  });
+  inp.addEventListener("keydown", function(e){ if (e.key === "Enter") doSolve(); });
+});
+
+$("clearBtn").addEventListener("click", function(){
+  numA.value = ""; numB.value = ""; solveOut.classList.add("hidden"); numA.focus();
+});
+$("solveBtn").addEventListener("click", doSolve);
+
+function doSolve(){
+  const a = parseInt(numA.value, 10), b = parseInt(numB.value, 10);
+  if (isNaN(a) || isNaN(b)){ solveHint.textContent = "Type a number in both boxes."; return; }
+  if (solveOp === "÷" && b === 0){ solveHint.textContent = "Nothing can be shared into 0 groups. Try another number."; return; }
+  if (solveOp === "-" && b > a){ solveHint.textContent = "For column subtraction, keep the bigger number on top."; return; }
+  solveHint.textContent = "Whole numbers up to 7 digits.";
+
+  const res = compute(a, b, solveOp);
+  let extra = "";
+  if (solveOp === "÷"){
+    const r = a % b;
+    extra = r ? ("remainder " + r + "  ·  " + (a / b).toFixed(2) + " as a decimal") : "shares out exactly";
+  }
+  solveOut.classList.remove("hidden");
+  solveOut.innerHTML =
+    '<div class="answer"><div class="label">' + a + " " + (solveOp === "-" ? "−" : solveOp) + " " + b + ' equals</div>'
+    + '<div class="value">' + res + '</div>'
+    + (extra ? '<div class="extra">' + extra + '</div>' : '')
+    + '</div>'
+    + '<div class="row-btns"><button class="btn ghost" id="howBtn">Show me how</button></div>'
+    + '<div id="howPad" class="hidden"></div>';
+
+  $("howBtn").addEventListener("click", function(){
+    const pad = $("howPad");
+    if (!pad.classList.contains("hidden")){ pad.classList.add("hidden"); this.textContent = "Show me how"; return; }
+    pad.innerHTML = '<p class="pad-title">Written out in columns</p><div class="pad">'
+                  + buildWorking(a, b, solveOp) + '</div>';
+    pad.classList.remove("hidden");
+    this.textContent = "Hide the working";
+  });
+}
+
+/* ---------------- practice mode ---------------- */
+const state = { ops:["+","-"], level:1, count:10, list:[], i:0, right:0, entry:"", t0:0, locked:false };
+
+function chipGroup(container, multi, onChange){
+  container.querySelectorAll(".chip").forEach(function(c){
+    c.addEventListener("click", function(){
+      if (multi){
+        const on = c.getAttribute("aria-pressed") === "true";
+        const others = Array.prototype.filter.call(container.querySelectorAll(".chip"), function(x){
+          return x.getAttribute("aria-pressed") === "true";
+        });
+        if (on && others.length === 1) return;
+        c.setAttribute("aria-pressed", on ? "false" : "true");
+      } else {
+        container.querySelectorAll(".chip").forEach(function(x){ x.setAttribute("aria-pressed","false"); });
+        c.setAttribute("aria-pressed","true");
+      }
+      onChange();
+    });
+  });
+}
+chipGroup($("pOps"), true, function(){
+  state.ops = Array.prototype.filter.call($("pOps").querySelectorAll(".chip"), function(x){
+    return x.getAttribute("aria-pressed") === "true";
+  }).map(function(x){ return x.dataset.op; });
+});
+chipGroup($("pLevel"), false, function(){
+  state.level = +$("pLevel").querySelector('[aria-pressed="true"]').dataset.level;
+  showBest();
+});
+chipGroup($("pCount"), false, function(){
+  state.count = +$("pCount").querySelector('[aria-pressed="true"]').dataset.count;
+});
+
+const rnd = function(lo, hi){ return lo + Math.floor(Math.random() * (hi - lo + 1)); };
+
+function makeQuestion(){
+  const op = state.ops[rnd(0, state.ops.length - 1)];
+  const L = state.level;
+  let a, b;
+  if (op === "+"){
+    if (L === 1){ a = rnd(1, 19); b = rnd(1, 19); }
+    else if (L === 2){ a = rnd(10, 99); b = rnd(10, 99); }
+    else { a = rnd(100, 999); b = rnd(100, 999); }
+  } else if (op === "-"){
+    if (L === 1){ a = rnd(5, 20); b = rnd(1, a); }
+    else if (L === 2){ a = rnd(20, 99); b = rnd(1, a); }
+    else { a = rnd(120, 999); b = rnd(10, a); }
+  } else if (op === "×"){
+    if (L === 1){ a = rnd(2, 10); b = rnd(2, 10); }
+    else if (L === 2){ a = rnd(11, 99); b = rnd(2, 9); }
+    else { a = rnd(12, 99); b = rnd(11, 49); }
+  } else {
+    let q, d;
+    if (L === 1){ d = rnd(2, 10); q = rnd(2, 10); }
+    else if (L === 2){ d = rnd(2, 9); q = rnd(11, 50); }
+    else { d = rnd(3, 15); q = rnd(12, 60); }
+    a = d * q; b = d;
+  }
+  return { a:a, b:b, op:op, answer:compute(a, b, op), given:null };
+}
+
+$("startBtn").addEventListener("click", function(){
+  state.list = []; state.i = 0; state.right = 0; state.entry = ""; state.locked = false;
+  for (let k = 0; k < state.count; k++) state.list.push(makeQuestion());
+  state.t0 = Date.now();
+  $("setup").classList.add("hidden");
+  $("results").classList.add("hidden");
+  $("quiz").classList.remove("hidden");
+  renderQuestion();
+});
+
+$("quitBtn").addEventListener("click", function(){ finish(true); });
+
+function renderQuestion(){
+  const q = state.list[state.i];
+  $("qCount").textContent = "Question " + (state.i + 1) + " of " + state.list.length;
+  $("qScore").textContent = state.right + " correct";
+  $("qTrack").style.width = (state.i / state.list.length * 100) + "%";
+  $("qText").textContent = q.a + "  " + (q.op === "-" ? "−" : q.op) + "  " + q.b;
+  const slot = $("qSlot");
+  slot.className = "slot"; slot.textContent = "?";
+  $("qFeedback").textContent = ""; $("qFeedback").className = "feedback";
+  state.entry = ""; state.locked = false;
+}
+
+document.querySelectorAll(".key").forEach(function(k){
+  k.addEventListener("click", function(){ press(k.dataset.k); });
+});
+document.addEventListener("keydown", function(e){
+  if ($("quiz").classList.contains("hidden")) return;
+  if (/^[0-9]$/.test(e.key)) press(e.key);
+  else if (e.key === "Backspace") press("del");
+  else if (e.key === "Enter") press("go");
+});
+
+function press(k){
+  if (state.locked) return;
+  const slot = $("qSlot");
+  if (k === "del") state.entry = state.entry.slice(0, -1);
+  else if (k === "go") return submit();
+  else if (state.entry.length < 7) state.entry += k;
+  slot.textContent = state.entry === "" ? "?" : state.entry;
+}
+
+function submit(){
+  if (state.entry === "") return;
+  const q = state.list[state.i];
+  const given = parseInt(state.entry, 10);
+  q.given = given;
+  const slot = $("qSlot"), fb = $("qFeedback");
+  state.locked = true;
+  if (given === q.answer){
+    state.right++;
+    slot.classList.add("ok"); fb.className = "feedback ok"; fb.textContent = "Correct!";
+    setTimeout(next, 600);
+  } else {
+    slot.classList.add("no"); slot.classList.add("shake");
+    fb.className = "feedback no"; fb.textContent = "The answer is " + q.answer;
+    setTimeout(next, 1700);
+  }
+  $("qScore").textContent = state.right + " correct";
+}
+
+function next(){
+  state.i++;
+  if (state.i >= state.list.length) finish(false);
+  else renderQuestion();
+}
+
+function finish(early){
+  const done = early ? state.i : state.list.length;
+  const secs = Math.max(1, Math.round((Date.now() - state.t0) / 1000));
+  const pct = done ? Math.round(state.right / done * 100) : 0;
+  $("quiz").classList.add("hidden");
+  const missed = state.list.slice(0, done).filter(function(q){ return q.given !== q.answer; });
+
+  let html = '<div class="scorering"><div class="big">' + state.right + " / " + done + '</div>'
+    + '<div class="sub">' + (pct === 100 ? "Every one right — brilliant." :
+        pct >= 80 ? "Strong work." : pct >= 50 ? "Getting there — keep going." : "Good try. Practise these again.") + '</div></div>'
+    + '<div class="stats">'
+    + '<div class="stat"><b>' + pct + '%</b><span>Accuracy</span></div>'
+    + '<div class="stat"><b>' + secs + 's</b><span>Time</span></div>'
+    + '<div class="stat"><b>' + Math.round(secs / done) + 's</b><span>Per question</span></div>'
+    + '</div>';
+
+  if (missed.length){
+    html += '<div class="missed"><p class="pad-title">Worth another look</p>';
+    missed.forEach(function(q, n){
+      html += '<div class="miss"><div class="line"><span>' + q.a + " " + (q.op === "-" ? "−" : q.op) + " " + q.b
+            + " = " + q.answer + '</span><span class="yours">you put ' + (q.given === null ? "—" : q.given) + '</span></div>'
+            + '<button data-miss="' + n + '">Show me how</button><div id="missPad' + n + '" class="hidden"></div></div>';
+    });
+    html += '</div>';
+  }
+  html += '<div class="row-btns"><button class="btn" id="againBtn">Practise again</button>'
+       + '<button class="btn ghost" id="backBtn">Change settings</button></div>';
+
+  const box = $("results");
+  box.innerHTML = html;
+  box.classList.remove("hidden");
+
+  box.querySelectorAll("[data-miss]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      const n = +btn.dataset.miss, q = missed[n], pad = $("missPad" + n);
+      if (!pad.classList.contains("hidden")){ pad.classList.add("hidden"); btn.textContent = "Show me how"; return; }
+      pad.innerHTML = '<div class="pad">' + buildWorking(q.a, q.b, q.op) + '</div>';
+      pad.classList.remove("hidden"); btn.textContent = "Hide the working";
+    });
+  });
+  $("againBtn").addEventListener("click", function(){ $("startBtn").click(); });
+  $("backBtn").addEventListener("click", function(){
+    box.classList.add("hidden"); $("setup").classList.remove("hidden");
+  });
+
+  saveBest(pct);
+}
+
+/* ---------------- best score (optional storage) ---------------- */
+let bests = {};
+function bestKey(){ return "L" + state.level; }
+async function loadBest(){
+  try{
+    if (window.storage && window.storage.get){
+      const r = await window.storage.get("mathslab:best", false);
+      if (r && r.value) bests = JSON.parse(r.value);
+    }
+  }catch(e){ /* no stored scores yet */ }
+  showBest();
+}
+async function saveBest(pct){
+  const k = bestKey();
+  if (!bests[k] || pct > bests[k]){
+    bests[k] = pct;
+    try{
+      if (window.storage && window.storage.set){
+        await window.storage.set("mathslab:best", JSON.stringify(bests), false);
+      }
+    }catch(e){ /* keep it in memory for this session */ }
+  }
+  showBest();
+}
+function showBest(){
+  const b = bests[bestKey()];
+  $("bestLine").textContent = b === undefined ? "" : "Best on this level so far: " + b + "%";
+}
+loadBest();
+
+})();
+</script>
+</body>
+</html>

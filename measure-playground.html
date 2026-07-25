@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Measuring Workshop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --dough:#FFF2DC;
+  --dough2:#FFE6BE;
+  --ink:#243447;
+  --berry:#E8467C;
+  --sky:#2E9BD6;
+  --leaf:#37A96B;
+  --sun:#FFC02E;
+  --grape:#7C5BD9;
+  --wood:#C98B4B;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--dough);
+  background-image:radial-gradient(circle at 12% 8%, #FFE0AE 0 2px, transparent 2px),
+                   radial-gradient(circle at 78% 34%, #FFD9C7 0 2px, transparent 2px),
+                   radial-gradient(circle at 40% 72%, #D9F0E1 0 2px, transparent 2px);
+  background-size:180px 180px;
+  color:var(--ink);
+  font-family:"Nunito",system-ui,sans-serif;
+  font-weight:700;
+  min-height:100vh;
+}
+.wrap{max-width:640px;margin:0 auto;padding:14px 14px 40px}
+
+/* ---------- top bar ---------- */
+.topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;min-height:52px}
+.iconbtn{
+  appearance:none;border:3px solid var(--ink);background:#fff;border-radius:16px;
+  width:52px;height:52px;font-size:24px;cursor:pointer;box-shadow:0 4px 0 var(--ink);
+  display:flex;align-items:center;justify-content:center;padding:0;
+}
+.iconbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.iconbtn.off{opacity:.45}
+.iconbtn:focus-visible{outline:4px solid var(--grape);outline-offset:3px}
+.stars{
+  margin-left:auto;background:#fff;border:3px solid var(--ink);border-radius:16px;
+  padding:8px 14px;font-family:"Fredoka",sans-serif;font-size:20px;
+  box-shadow:0 4px 0 var(--ink);white-space:nowrap;
+}
+
+/* ---------- home ---------- */
+.hero{text-align:center;margin:6px 0 20px}
+.hero h1{
+  font-family:"Fredoka",sans-serif;font-weight:700;font-size:34px;margin:0;
+  line-height:1.1;
+}
+.hero h1 em{font-style:normal;color:var(--berry)}
+.hero p{margin:8px 0 0;font-size:16px;color:#5D6E7F}
+
+.stations{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.station{
+  appearance:none;border:4px solid var(--ink);border-radius:24px;cursor:pointer;
+  padding:18px 10px 16px;text-align:center;color:var(--ink);
+  font-family:"Fredoka",sans-serif;font-size:19px;
+  box-shadow:0 6px 0 var(--ink);transition:transform .1s;
+}
+.station:active{transform:translateY(4px);box-shadow:0 2px 0 var(--ink)}
+.station:focus-visible{outline:4px solid var(--grape);outline-offset:4px}
+.station .big{display:block;font-size:52px;line-height:1.1;margin-bottom:6px}
+.station .sub{display:block;font-family:"Nunito";font-size:13px;font-weight:700;opacity:.7;margin-top:2px}
+.s1{background:#FFD9E4}
+.s2{background:#D6ECFF}
+.s3{background:#D8F5E2}
+.s4{background:#FFE9BC}
+
+.note{
+  margin-top:22px;background:#fff;border:3px dashed #C3D0DC;border-radius:18px;
+  padding:14px 16px;font-size:13px;font-weight:700;color:#5D6E7F;line-height:1.6;
+}
+.note b{color:var(--ink)}
+
+/* ---------- module shell ---------- */
+.card{
+  background:#fff;border:4px solid var(--ink);border-radius:26px;
+  box-shadow:0 6px 0 var(--ink);padding:18px 16px 22px;
+}
+.ask{
+  font-family:"Fredoka",sans-serif;font-size:26px;text-align:center;
+  margin:0 0 16px;line-height:1.2;
+}
+.hint{text-align:center;font-size:15px;color:#5D6E7F;margin:0 0 14px}
+
+.pick{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.opt{
+  appearance:none;border:4px solid var(--ink);background:var(--dough2);border-radius:20px;
+  padding:16px 8px;cursor:pointer;font-family:"Fredoka",sans-serif;font-size:18px;color:var(--ink);
+  box-shadow:0 5px 0 var(--ink);
+}
+.opt .em{display:block;font-size:46px;line-height:1.1}
+.opt:active{transform:translateY(3px);box-shadow:0 2px 0 var(--ink)}
+.opt:focus-visible{outline:4px solid var(--grape);outline-offset:3px}
+.opt.right{background:#B9F0CE}
+.opt.wrong{background:#FFC9C9}
+.opt[disabled]{cursor:default}
+
+.bigbtn{
+  display:block;width:100%;margin-top:18px;appearance:none;cursor:pointer;
+  border:4px solid var(--ink);border-radius:20px;background:var(--sun);
+  font-family:"Fredoka",sans-serif;font-size:22px;color:var(--ink);
+  padding:16px;box-shadow:0 6px 0 var(--ink);
+}
+.bigbtn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--ink)}
+.bigbtn:focus-visible{outline:4px solid var(--grape);outline-offset:3px}
+.bigbtn.go{background:var(--leaf);color:#fff}
+
+.say{
+  margin-top:16px;text-align:center;font-family:"Fredoka",sans-serif;font-size:22px;
+  min-height:34px;color:var(--berry);
+}
+
+/* ---------- balance scale ---------- */
+.scalebox{height:210px;position:relative;margin:0 auto;max-width:420px}
+.beam{
+  position:absolute;left:50%;top:52px;width:78%;height:14px;
+  background:var(--wood);border:3px solid var(--ink);border-radius:8px;
+  transform:translateX(-50%) rotate(0deg);
+  transform-origin:50% 50%;
+  transition:transform .9s cubic-bezier(.34,1.4,.5,1);
+}
+.pan{position:absolute;top:8px;width:96px;margin-left:-48px}
+.pan .rope{width:3px;height:26px;background:var(--ink);margin:0 auto}
+.pan .dish{
+  height:60px;border:4px solid var(--ink);border-top:0;background:#FFE0EC;
+  border-radius:0 0 40px 40px;display:flex;align-items:center;justify-content:center;
+  font-size:38px;
+}
+.pan.l{left:0}
+.pan.r{left:100%}
+.post{
+  position:absolute;left:50%;top:58px;width:16px;height:112px;margin-left:-8px;
+  background:var(--wood);border:3px solid var(--ink);border-radius:6px;
+}
+.base{
+  position:absolute;left:50%;bottom:0;width:190px;height:20px;margin-left:-95px;
+  background:var(--wood);border:3px solid var(--ink);border-radius:10px;
+}
+
+/* ---------- length ---------- */
+.lenbox{padding:10px 0 4px}
+.thing{
+  height:64px;border:4px solid var(--ink);border-radius:16px;background:#CFE7FF;
+  display:flex;align-items:center;padding-left:8px;font-size:38px;
+  transition:width .3s;overflow:hidden;
+}
+.blocks{display:flex;gap:4px;margin-top:10px;flex-wrap:wrap}
+.blk{
+  width:34px;height:34px;border:3px solid var(--ink);border-radius:8px;background:var(--sun);
+  display:flex;align-items:center;justify-content:center;font-size:14px;font-family:"Fredoka";
+}
+.blk.ghost{background:#fff;opacity:.4}
+.count{text-align:center;font-family:"Fredoka";font-size:30px;margin-top:12px}
+
+/* ---------- timer ---------- */
+.sand{
+  height:44px;border:4px solid var(--ink);border-radius:22px;background:#EDF3F7;
+  overflow:hidden;margin-top:8px;
+}
+.sand i{display:block;height:100%;background:var(--sky);width:100%}
+.clock{text-align:center;font-family:"Fredoka";font-size:64px;line-height:1.1;margin-top:10px}
+
+/* ---------- race ---------- */
+.lane{
+  position:relative;height:58px;border-bottom:4px dashed #C3D0DC;overflow:hidden;
+}
+.lane:last-child{border-bottom:0}
+.racer{
+  position:absolute;left:0;top:8px;font-size:38px;
+  transition:left linear;
+}
+.flag{position:absolute;right:2px;top:10px;font-size:26px;opacity:.5}
+
+/* ---------- burst ---------- */
+#burst{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:50}
+.spark{position:absolute;font-size:30px;animation:fly 1.1s ease-out forwards}
+@keyframes fly{
+  0%{transform:translate(0,0) scale(.4);opacity:1}
+  100%{transform:translate(var(--dx),var(--dy)) scale(1.3);opacity:0}
+}
+
+@media (max-width:400px){
+  .hero h1{font-size:28px}
+  .station{font-size:17px}
+  .station .big{font-size:44px}
+  .ask{font-size:22px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <button class="iconbtn" id="back" title="Go back" aria-label="Go back">⬅️</button>
+    <button class="iconbtn" id="sound" title="Voice on or off" aria-label="Voice on or off">🔊</button>
+    <div class="stars" id="stars">⭐ 0</div>
+  </div>
+  <div id="screen"></div>
+</div>
+<div id="burst"></div>
+
+<script>
+/* ================= data ================= */
+const THINGS = [
+  {e:"🪶", n:"feather",  kg:0.001},
+  {e:"🍃", n:"leaf",     kg:0.002},
+  {e:"🎈", n:"balloon",  kg:0.01},
+  {e:"🍎", n:"apple",    kg:0.2},
+  {e:"📕", n:"book",     kg:0.6},
+  {e:"🐱", n:"cat",      kg:4},
+  {e:"🎒", n:"bag",      kg:3},
+  {e:"🐶", n:"dog",      kg:20},
+  {e:"🚲", n:"bike",     kg:12},
+  {e:"🧒", n:"kid",      kg:20},
+  {e:"🚗", n:"car",      kg:1200},
+  {e:"🐘", n:"elephant", kg:5000},
+  {e:"🐳", n:"whale",    kg:30000}
+];
+
+const LONGS = [
+  {e:"🖍️", n:"crayon", b:3},
+  {e:"✏️", n:"pencil", b:4},
+  {e:"🥕", n:"carrot", b:3},
+  {e:"🐍", n:"snake",  b:7},
+  {e:"📏", n:"ruler",  b:6},
+  {e:"🚌", n:"bus",    b:9},
+  {e:"🚂", n:"train",  b:11},
+  {e:"🪱", n:"worm",   b:2}
+];
+
+const TIMES = [
+  {a:{e:"😉", n:"a blink"},        b:{e:"😴", n:"a whole night"},   longer:"b"},
+  {a:{e:"🦷", n:"brushing teeth"}, b:{e:"🎬", n:"a movie"},         longer:"b"},
+  {a:{e:"🍪", n:"eating a cookie"},b:{e:"🍽️", n:"eating dinner"},  longer:"b"},
+  {a:{e:"🎂", n:"one birthday"},   b:{e:"👏", n:"one clap"},         longer:"a"},
+  {a:{e:"🛁", n:"a bath"},         b:{e:"💧", n:"one drop falling"}, longer:"a"},
+  {a:{e:"🌙", n:"one night"},      b:{e:"⏰", n:"one minute"},        longer:"a"}
+];
+
+const RACERS = [
+  {e:"🐌", n:"snail",  s:0.003},
+  {e:"🐢", n:"turtle", s:0.3},
+  {e:"🚶", n:"walking",s:1.4},
+  {e:"🐕", n:"dog",    s:9},
+  {e:"🏃", n:"running",s:5},
+  {e:"🚲", n:"bike",   s:6},
+  {e:"🚗", n:"car",    s:25},
+  {e:"✈️", n:"plane",  s:250},
+  {e:"🚀", n:"rocket", s:2000}
+];
+
+/* ================= state ================= */
+let stars = 0, voice = true, screen = "home";
+const $ = id => document.getElementById(id);
+const scr = $("screen");
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+
+function say(text){
+  if(!voice || !window.speechSynthesis) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.85; u.pitch = 1.15; u.lang = "en-IN";
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function addStar(n){
+  stars += n;
+  $("stars").textContent = "⭐ " + stars;
+}
+function burst(){
+  const box = $("burst");
+  for(let i=0;i<14;i++){
+    const s = document.createElement("div");
+    s.className = "spark";
+    s.textContent = pick(["⭐","🌟","✨","🎉","💫"]);
+    s.style.left = (30 + Math.random()*40) + "%";
+    s.style.top  = (40 + Math.random()*20) + "%";
+    s.style.setProperty("--dx", (Math.random()*300-150) + "px");
+    s.style.setProperty("--dy", (-100 - Math.random()*220) + "px");
+    box.appendChild(s);
+    setTimeout(()=>s.remove(), 1200);
+  }
+}
+
+/* ================= home ================= */
+function home(){
+  screen = "home";
+  speechSynthesis && speechSynthesis.cancel();
+  $("back").style.visibility = "hidden";
+  scr.innerHTML = `
+    <div class="hero">
+      <h1>The <em>Measuring</em><br>Workshop</h1>
+      <p>Pick a table to play at</p>
+    </div>
+    <div class="stations">
+      <button class="station s1" data-go="weight"><span class="big">⚖️</span>Heavy or Light<span class="sub">weight</span></button>
+      <button class="station s2" data-go="length"><span class="big">📏</span>How Long?<span class="sub">length</span></button>
+      <button class="station s3" data-go="time"><span class="big">⏳</span>Long or Quick<span class="sub">time</span></button>
+      <button class="station s4" data-go="speed"><span class="big">🏁</span>Fast or Slow<span class="sub">speed</span></button>
+    </div>
+    <div class="note">
+      <b>For grown-ups:</b> at this age the goal is comparing, not numbers.
+      <b>Heavy or Light</b> builds the idea that size and weight are different things.
+      <b>How Long?</b> teaches measuring by laying units end to end with no gaps.
+      <b>Long or Quick</b> gives a felt sense of duration — sit through the real timer together.
+      <b>Fast or Slow</b> separates speed from distance. Ask "how do you know?" after every answer.
+    </div>`;
+  scr.querySelectorAll("[data-go]").forEach(b=>{
+    b.onclick = () => ({weight:weightGame,length:lengthGame,time:timeGame,speed:speedGame})[b.dataset.go]();
+  });
+}
+
+function shell(inner){
+  $("back").style.visibility = "visible";
+  scr.innerHTML = `<div class="card">${inner}</div>`;
+}
+
+/* ================= 1. weight ================= */
+function weightGame(){
+  screen = "weight";
+  let a, b, guard = 0;
+  do{
+    a = pick(THINGS); b = pick(THINGS); guard++;
+  }while((a === b || Math.max(a.kg,b.kg)/Math.min(a.kg,b.kg) < 5) && guard < 60);
+
+  shell(`
+    <p class="ask">Which one is heavier?</p>
+    <div class="scalebox">
+      <div class="base"></div>
+      <div class="post"></div>
+      <div class="beam" id="beam">
+        <div class="pan l"><div class="rope"></div><div class="dish" id="dishL">${a.e}</div></div>
+        <div class="pan r"><div class="rope"></div><div class="dish" id="dishR">${b.e}</div></div>
+      </div>
+    </div>
+    <div class="pick">
+      <button class="opt" data-k="a"><span class="em">${a.e}</span>${a.n}</button>
+      <button class="opt" data-k="b"><span class="em">${b.e}</span>${b.n}</button>
+    </div>
+    <div class="say" id="say"></div>
+    <button class="bigbtn" id="next" style="display:none">Next one ➡️</button>`);
+
+  say("Which one is heavier? The " + a.n + ", or the " + b.n + "?");
+
+  const heavier = a.kg > b.kg ? "a" : "b";
+  const opts = scr.querySelectorAll(".opt");
+  opts.forEach(o => o.onclick = () => {
+    opts.forEach(x => { x.disabled = true; });
+    const ok = o.dataset.k === heavier;
+    o.classList.add(ok ? "right" : "wrong");
+    if(!ok) scr.querySelector(`.opt[data-k="${heavier}"]`).classList.add("right");
+    $("beam").style.transform = "translateX(-50%) rotate(" + (heavier === "a" ? 13 : -13) + "deg)";
+    const H = heavier === "a" ? a : b, L = heavier === "a" ? b : a;
+    const line = ok ? "Yes! The " + H.n + " is heavier." : "Look! The " + H.n + " goes down. It is heavier.";
+    $("say").textContent = (ok ? "⭐ " : "👀 ") + line;
+    say(line + " The " + L.n + " is lighter, so it goes up.");
+    if(ok){ addStar(1); burst(); }
+    $("next").style.display = "block";
+    $("next").onclick = weightGame;
+  });
+}
+
+/* ================= 2. length ================= */
+function lengthGame(){
+  screen = "length";
+  const t = pick(LONGS);
+  let laid = 0;
+
+  shell(`
+    <p class="ask">How long is the ${t.n}?</p>
+    <p class="hint">Tap to put blocks under it — no gaps!</p>
+    <div class="lenbox">
+      <div class="thing" id="thing" style="width:${t.b*38}px;max-width:100%">${t.e}</div>
+      <div class="blocks" id="blocks"></div>
+      <div class="count" id="count">0 blocks</div>
+    </div>
+    <button class="bigbtn go" id="lay">➕ Add a block</button>
+    <div class="say" id="say"></div>
+    <button class="bigbtn" id="next" style="display:none">Another one ➡️</button>`);
+
+  say("How long is the " + t.n + "? Tap to add blocks.");
+
+  const box = $("blocks");
+  for(let i=0;i<t.b;i++){
+    const g = document.createElement("div");
+    g.className = "blk ghost";
+    box.appendChild(g);
+  }
+
+  $("lay").onclick = () => {
+    if(laid >= t.b) return;
+    const cells = box.children;
+    cells[laid].classList.remove("ghost");
+    laid++;
+    cells[laid-1].textContent = laid;
+    $("count").textContent = laid + (laid === 1 ? " block" : " blocks");
+    say(String(laid));
+    if(laid === t.b){
+      $("lay").style.display = "none";
+      $("say").textContent = "⭐ The " + t.n + " is " + t.b + " blocks long!";
+      setTimeout(()=>say("The " + t.n + " is " + t.b + " blocks long."), 500);
+      addStar(1); burst();
+      $("next").style.display = "block";
+      $("next").onclick = lengthGame;
+    }
+  };
+}
+
+/* ================= 3. time ================= */
+function timeGame(){
+  screen = "time";
+  const q = pick(TIMES);
+
+  shell(`
+    <p class="ask">Which one takes longer?</p>
+    <div class="pick">
+      <button class="opt" data-k="a"><span class="em">${q.a.e}</span>${q.a.n}</button>
+      <button class="opt" data-k="b"><span class="em">${q.b.e}</span>${q.b.n}</button>
+    </div>
+    <div class="say" id="say"></div>
+    <button class="bigbtn" id="next" style="display:none">Another one ➡️</button>
+    <hr style="border:0;border-top:3px dashed #C3D0DC;margin:22px 0 16px">
+    <p class="ask" style="font-size:20px">Feel how long 10 seconds is</p>
+    <div class="sand"><i id="sand"></i></div>
+    <div class="clock" id="clock">10</div>
+    <button class="bigbtn go" id="start">▶️ Start — sit very still!</button>`);
+
+  say("Which one takes longer?");
+
+  const opts = scr.querySelectorAll(".opt");
+  opts.forEach(o => o.onclick = () => {
+    opts.forEach(x => x.disabled = true);
+    const ok = o.dataset.k === q.longer;
+    o.classList.add(ok ? "right" : "wrong");
+    if(!ok) scr.querySelector(`.opt[data-k="${q.longer}"]`).classList.add("right");
+    const W = q.longer === "a" ? q.a : q.b, S = q.longer === "a" ? q.b : q.a;
+    const line = W.n + " takes much longer than " + S.n + ".";
+    $("say").textContent = (ok ? "⭐ " : "👀 ") + line;
+    say(line);
+    if(ok){ addStar(1); burst(); }
+    $("next").style.display = "block";
+    $("next").onclick = timeGame;
+  });
+
+  let timer = null;
+  $("start").onclick = () => {
+    if(timer) return;
+    let left = 10;
+    $("clock").textContent = left;
+    $("sand").style.width = "100%";
+    say("Ready? Sit still for ten seconds.");
+    timer = setInterval(() => {
+      left--;
+      $("clock").textContent = left > 0 ? left : "🎉";
+      $("sand").style.width = (left*10) + "%";
+      if(left > 0 && left <= 3) say(String(left));
+      if(left <= 0){
+        clearInterval(timer); timer = null;
+        say("That was ten seconds! It felt long, didn't it?");
+        addStar(1); burst();
+        $("clock").textContent = "🎉";
+      }
+    }, 1000);
+  };
+}
+
+/* ================= 4. speed ================= */
+function speedGame(){
+  screen = "speed";
+  const pool = [...RACERS];
+  const three = [];
+  while(three.length < 3){
+    const r = pool.splice(Math.floor(Math.random()*pool.length),1)[0];
+    if(three.every(x => Math.max(x.s,r.s)/Math.min(x.s,r.s) > 2.5)) three.push(r);
+    if(pool.length === 0) break;
+  }
+  while(three.length < 3) three.push(RACERS[three.length]);
+
+  shell(`
+    <p class="ask">Who will win the race?</p>
+    <div class="pick" style="grid-template-columns:1fr 1fr 1fr" id="picks">
+      ${three.map((r,i)=>`<button class="opt" data-i="${i}"><span class="em">${r.e}</span>${r.n}</button>`).join("")}
+    </div>
+    <div style="margin-top:16px;border:4px solid var(--ink);border-radius:20px;padding:6px 10px;background:#F4FAFF">
+      ${three.map((r,i)=>`<div class="lane"><span class="racer" id="r${i}">${r.e}</span><span class="flag">🏁</span></div>`).join("")}
+    </div>
+    <div class="say" id="say"></div>
+    <button class="bigbtn" id="next" style="display:none">Race again ➡️</button>`);
+
+  say("Who do you think will win? Tap one.");
+
+  const fastest = three.indexOf(three.reduce((m,x)=> x.s > m.s ? x : m, three[0]));
+  const opts = scr.querySelectorAll(".opt");
+  opts.forEach(o => o.onclick = () => {
+    opts.forEach(x => x.disabled = true);
+    const guess = Number(o.dataset.i);
+    say("Ready, steady, go!");
+
+    const ls = three.map(r => Math.log10(r.s));
+    const lo = Math.min(...ls), hi = Math.max(...ls);
+    three.forEach((r,i) => {
+      const norm = hi === lo ? 1 : (ls[i]-lo)/(hi-lo);
+      const dur = 4.4 - norm*3.2;
+      const el = $("r"+i);
+      el.style.transitionDuration = dur + "s";
+      requestAnimationFrame(()=>{ el.style.left = "calc(100% - 46px)"; });
+    });
+
+    setTimeout(() => {
+      const ok = guess === fastest;
+      o.classList.add(ok ? "right" : "wrong");
+      if(!ok) scr.querySelector(`.opt[data-i="${fastest}"]`).classList.add("right");
+      const line = three[fastest].n + " is the fastest!";
+      $("say").textContent = (ok ? "⭐ " : "👀 ") + line;
+      say(line + " The " + three[three.map(r=>r.s).indexOf(Math.min(...three.map(r=>r.s)))].n + " is the slowest.");
+      if(ok){ addStar(1); burst(); }
+      $("next").style.display = "block";
+      $("next").onclick = speedGame;
+    }, 1500);
+  });
+}
+
+/* ================= wiring ================= */
+$("back").onclick = home;
+$("sound").onclick = () => {
+  voice = !voice;
+  $("sound").textContent = voice ? "🔊" : "🔇";
+  $("sound").classList.toggle("off", !voice);
+  if(!voice && window.speechSynthesis) speechSynthesis.cancel();
+};
+home();
+</script>
+</body>
+</html>
