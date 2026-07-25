@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Slate — Trace English, Telugu &amp; Numbers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Tammudu+2:wght@400;500;600;700;800&family=Mulish:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wall:#D8D2B4;
+  --wall-dark:#C4BC99;
+  --board:#22443C;
+  --board-deep:#183129;
+  --board-edge:#2E5a4E;
+  --frame:#A9713C;
+  --frame-dark:#7E5027;
+  --frame-light:#C99055;
+  --chalk:#F2F4EE;
+  --chalk-dim:rgba(242,244,238,.42);
+  --yellow:#F6C445;
+  --pink:#F58AA3;
+  --blue:#7FD3E4;
+  --green:#A6D96A;
+  --ink:#2A2418;
+  --ink-soft:#5C513A;
+  --r:14px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--wall);
+  background-image:
+    radial-gradient(circle at 15% 10%, rgba(255,255,255,.35), transparent 55%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.09'/%3E%3C/svg%3E");
+  color:var(--ink);
+  font-family:'Mulish',system-ui,sans-serif;
+  min-height:100dvh;
+  padding:0 0 env(safe-area-inset-bottom);
+}
+.wrap{max-width:520px;margin:0 auto;padding:16px 16px 40px}
+
+/* ---------- shared chrome ---------- */
+.topbar{display:flex;align-items:center;gap:10px;padding:6px 0 14px;min-height:52px}
+.back{
+  border:none;background:var(--frame);color:#fff;font:700 15px/1 'Mulish';
+  padding:11px 15px;border-radius:11px;box-shadow:0 3px 0 var(--frame-dark);cursor:pointer;
+}
+.back:active{transform:translateY(2px);box-shadow:0 1px 0 var(--frame-dark)}
+.crumb{font:800 17px/1.2 'Baloo Tammudu 2';color:var(--ink);letter-spacing:.2px}
+.crumb small{display:block;font:600 11px/1.4 'Mulish';color:var(--ink-soft);letter-spacing:.14em;text-transform:uppercase}
+
+/* ---------- slate frame ---------- */
+.slate{
+  background:linear-gradient(160deg,var(--frame-light),var(--frame) 40%,var(--frame-dark));
+  padding:10px;border-radius:var(--r);
+  box-shadow:0 6px 0 rgba(0,0,0,.22), 0 14px 26px rgba(60,40,20,.22);
+}
+.slate-in{
+  background:radial-gradient(120% 90% at 30% 15%, var(--board-edge), var(--board) 45%, var(--board-deep));
+  border-radius:7px;position:relative;overflow:hidden;
+}
+.slate-in::after{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.16;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23m)'/%3E%3C/svg%3E");
+}
+
+/* ---------- home ---------- */
+.hero{text-align:center;padding:12px 4px 22px}
+.hero h1{
+  font:800 40px/1.05 'Baloo Tammudu 2';margin:0;color:var(--ink);
+}
+.hero h1 span{color:var(--frame-dark)}
+.hero p{margin:8px 0 0;font:600 14px/1.5 'Mulish';color:var(--ink-soft)}
+.tracks{display:grid;gap:16px}
+.track{border:none;padding:0;background:none;cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}
+.track .slate{transition:transform .16s ease, box-shadow .16s ease}
+.track:hover .slate{transform:translateY(-3px);box-shadow:0 9px 0 rgba(0,0,0,.22),0 18px 30px rgba(60,40,20,.24)}
+.track:active .slate{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.22)}
+.track .slate-in{display:flex;align-items:center;gap:16px;padding:20px 18px}
+.track .big{
+  font:700 52px/1 'Baloo Tammudu 2';color:var(--chalk);
+  min-width:96px;text-align:center;text-shadow:0 0 14px rgba(242,244,238,.28);
+}
+.track .meta strong{display:block;font:700 21px/1.2 'Baloo Tammudu 2';color:var(--chalk)}
+.track .meta em{display:block;font:600 12.5px/1.5 'Mulish';font-style:normal;color:var(--chalk-dim);margin-top:3px}
+.track:nth-child(1) .big{color:var(--yellow)}
+.track:nth-child(2) .big{color:var(--pink)}
+.track:nth-child(3) .big{color:var(--blue)}
+.footnote{margin:22px 2px 0;font:600 12px/1.6 'Mulish';color:var(--ink-soft);text-align:center}
+
+/* ---------- grid ---------- */
+.gsection{font:800 13px/1 'Mulish';letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);margin:20px 2px 10px}
+.gsection:first-of-type{margin-top:4px}
+.gsection b{font-family:'Baloo Tammudu 2';font-size:15px;letter-spacing:0;text-transform:none;color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:9px}
+.grid.num{grid-template-columns:repeat(auto-fill,minmax(56px,1fr))}
+.tile{
+  position:relative;aspect-ratio:1;border:none;cursor:pointer;
+  border-radius:11px;padding:0;
+  background:linear-gradient(165deg,var(--board-edge),var(--board) 55%,var(--board-deep));
+  box-shadow:0 3px 0 var(--frame-dark), inset 0 0 0 2px rgba(0,0,0,.18);
+  color:var(--chalk);font:600 27px/1 'Baloo Tammudu 2';
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+}
+.tile:active{transform:translateY(2px);box-shadow:0 1px 0 var(--frame-dark), inset 0 0 0 2px rgba(0,0,0,.18)}
+.tile .sub{font:600 9.5px/1 'Mulish';color:var(--chalk-dim);letter-spacing:.04em}
+.tile.num{font-size:23px}
+.tile.done::before{
+  content:"✓";position:absolute;top:4px;right:6px;color:var(--green);
+  font:700 13px/1 'Mulish';text-shadow:0 0 6px rgba(166,217,106,.5)
+}
+
+/* ---------- trace ---------- */
+.boardwrap{position:relative}
+.canvases{position:relative;width:100%;aspect-ratio:4/3}
+.canvases canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#guide{pointer-events:none}
+#ink{touch-action:none;cursor:crosshair}
+.romanbadge{
+  position:absolute;left:12px;top:10px;z-index:3;
+  font:600 11px/1 'Mulish';letter-spacing:.14em;text-transform:uppercase;color:var(--chalk-dim)
+}
+.stars{
+  position:absolute;inset:0;z-index:4;display:none;
+  align-items:center;justify-content:center;flex-direction:column;gap:6px;
+  background:rgba(24,49,41,.82);color:var(--chalk);
+  font:700 15px/1.4 'Mulish';text-align:center;padding:20px;
+}
+.stars.show{display:flex;animation:pop .28s ease}
+.stars .s{font-size:44px;letter-spacing:6px}
+.stars .m{font-family:'Baloo Tammudu 2';font-size:22px}
+.stars button{
+  margin-top:8px;border:none;background:var(--green);color:#1c3208;
+  font:800 14px/1 'Mulish';padding:12px 20px;border-radius:11px;cursor:pointer;
+}
+@keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+
+/* chalk tray */
+.tray{
+  display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap;
+  background:linear-gradient(180deg,var(--frame-light),var(--frame-dark));
+  border-radius:12px;padding:10px 11px;box-shadow:0 4px 0 rgba(0,0,0,.2);
+}
+.chalks{display:flex;gap:7px;flex:1}
+.chalk-stick{
+  width:34px;height:22px;border-radius:5px;border:none;cursor:pointer;
+  box-shadow:inset 0 -4px 0 rgba(0,0,0,.22), 0 2px 3px rgba(0,0,0,.28);
+  transition:transform .12s ease;
+}
+.chalk-stick[aria-pressed="true"]{transform:translateY(-6px) scale(1.06);box-shadow:inset 0 -4px 0 rgba(0,0,0,.22),0 6px 8px rgba(0,0,0,.3)}
+.tool{
+  border:none;background:rgba(255,255,255,.9);color:var(--frame-dark);
+  font:800 12px/1 'Mulish';padding:11px 12px;border-radius:9px;cursor:pointer;
+}
+.tool:active{transform:translateY(2px)}
+
+.rowbtns{display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:9px;margin-top:11px}
+.btn{
+  border:none;border-radius:12px;cursor:pointer;font:800 14px/1 'Mulish';
+  padding:15px 10px;background:var(--frame);color:#fff;box-shadow:0 4px 0 var(--frame-dark);
+}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--frame-dark)}
+.btn.primary{background:var(--board);box-shadow:0 4px 0 var(--board-deep)}
+.btn:disabled{opacity:.4;cursor:default}
+
+/* words */
+.words{margin-top:22px;display:grid;gap:9px}
+.wtitle{font:800 13px/1 'Mulish';letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);margin:0 2px 2px}
+.word{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;
+  background:#fff;border:none;border-left:6px solid var(--frame);
+  border-radius:11px;padding:12px 13px;box-shadow:0 2px 0 rgba(90,70,40,.18);
+  font:inherit;color:inherit;
+}
+.word:active{transform:translateY(2px);box-shadow:none}
+.word:nth-child(2){border-left-color:var(--yellow)}
+.word:nth-child(3){border-left-color:var(--pink)}
+.word:nth-child(4){border-left-color:var(--blue)}
+.word:nth-child(5){border-left-color:var(--green)}
+.word .emo{font-size:27px;line-height:1;min-width:34px;text-align:center}
+.word .txt strong{display:block;font:700 19px/1.25 'Baloo Tammudu 2'}
+.word .txt em{display:block;font-style:normal;font:600 12px/1.5 'Mulish';color:var(--ink-soft)}
+.word .spk{margin-left:auto;font-size:17px;opacity:.45}
+
+/* number extras */
+.numinfo{margin-top:20px;display:grid;gap:9px}
+.numcard{background:#fff;border-radius:12px;padding:13px 14px;box-shadow:0 2px 0 rgba(90,70,40,.18);display:flex;align-items:center;gap:12px;cursor:pointer;border:none;border-left:6px solid var(--yellow);width:100%;text-align:left;font:inherit;color:inherit}
+.numcard:nth-child(2){border-left-color:var(--pink)}
+.numcard .lbl{font:800 10.5px/1 'Mulish';letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
+.numcard .val{font:700 22px/1.25 'Baloo Tammudu 2';display:block;margin-top:3px}
+.numcard .rom{font:600 12px/1.4 'Mulish';color:var(--ink-soft)}
+.dots{margin-top:18px;background:#fff;border-radius:12px;padding:14px;box-shadow:0 2px 0 rgba(90,70,40,.18)}
+.dots .lbl{font:800 10.5px/1 'Mulish';letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:10px}
+.dotgrid{display:grid;grid-template-columns:repeat(10,1fr);gap:5px}
+.dot{aspect-ratio:1;border-radius:50%;background:#E7E2D2}
+.dot.on{background:var(--frame);box-shadow:inset 0 -2px 0 rgba(0,0,0,.15)}
+
+.nav{display:flex;gap:9px;margin-top:22px}
+.nav button{flex:1;border:none;background:var(--wall-dark);color:var(--ink);font:800 13px/1 'Mulish';padding:14px;border-radius:11px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.14)}
+.nav button:disabled{opacity:.35}
+.nav button:active{transform:translateY(2px);box-shadow:none}
+
+.hidden{display:none!important}
+:focus-visible{outline:3px solid var(--frame-dark);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HOME -->
+  <section id="home">
+    <div class="hero">
+      <h1>Slate<span>.</span></h1>
+      <p>Pick a board. Trace with chalk. Learn the words.</p>
+    </div>
+    <div class="tracks">
+      <button class="track" data-mode="english">
+        <div class="slate"><div class="slate-in">
+          <div class="big">Aa</div>
+          <div class="meta"><strong>English</strong><em>26 letters · capital &amp; small · 4 words each</em></div>
+        </div></div>
+      </button>
+      <button class="track" data-mode="telugu">
+        <div class="slate"><div class="slate-in">
+          <div class="big">అ</div>
+          <div class="meta"><strong>తెలుగు · Telugu</strong><em>16 అచ్చులు + 38 హల్లులు · 4 పదాలు each</em></div>
+        </div></div>
+      </button>
+      <button class="track" data-mode="numbers">
+        <div class="slate"><div class="slate-in">
+          <div class="big">123</div>
+          <div class="meta"><strong>Numbers</strong><em>1 to 100 · English &amp; Telugu spelling · counting dots</em></div>
+        </div></div>
+      </button>
+    </div>
+    <p class="footnote">Tap any word to hear it. Works with a finger, stylus or mouse.</p>
+  </section>
+
+  <!-- GRID -->
+  <section id="grid" class="hidden">
+    <div class="topbar">
+      <button class="back" data-go="home">← Boards</button>
+      <div class="crumb" id="gridTitle"></div>
+    </div>
+    <div id="gridBody"></div>
+  </section>
+
+  <!-- TRACE -->
+  <section id="trace" class="hidden">
+    <div class="topbar">
+      <button class="back" id="toGrid">← All</button>
+      <div class="crumb" id="traceTitle"></div>
+    </div>
+
+    <div class="slate boardwrap">
+      <div class="slate-in">
+        <div class="canvases">
+          <canvas id="guide"></canvas>
+          <canvas id="ink"></canvas>
+          <div class="romanbadge" id="roman"></div>
+          <div class="stars" id="stars">
+            <div class="s" id="starRow">★★★</div>
+            <div class="m" id="starMsg">Nice tracing!</div>
+            <button id="starClose">Keep going</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tray">
+      <div class="chalks" id="chalks"></div>
+      <button class="tool" id="undo">Undo</button>
+      <button class="tool" id="wipe">Wipe</button>
+      <button class="tool" id="guideBtn" aria-pressed="true">Guide on</button>
+    </div>
+
+    <div class="rowbtns">
+      <button class="btn" id="caseBtn">a / A</button>
+      <button class="btn primary" id="checkBtn">Check my tracing</button>
+      <button class="btn" id="hearBtn">🔊 Hear</button>
+    </div>
+
+    <div id="detail"></div>
+
+    <div class="nav">
+      <button id="prev">← Previous</button>
+      <button id="next">Next →</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ============================================================
+   DATA
+   ============================================================ */
+const EN_WORDS = {
+ A:[["Apple","🍎"],["Ant","🐜"],["Arrow","🏹"],["Axe","🪓"]],
+ B:[["Ball","⚽"],["Banana","🍌"],["Bird","🐦"],["Book","📖"]],
+ C:[["Cat","🐱"],["Car","🚗"],["Cake","🎂"],["Cow","🐄"]],
+ D:[["Dog","🐶"],["Duck","🦆"],["Drum","🥁"],["Door","🚪"]],
+ E:[["Egg","🥚"],["Elephant","🐘"],["Eye","👁️"],["Eagle","🦅"]],
+ F:[["Fish","🐟"],["Fan","🌀"],["Flower","🌸"],["Frog","🐸"]],
+ G:[["Goat","🐐"],["Grapes","🍇"],["Gift","🎁"],["Guitar","🎸"]],
+ H:[["Hat","🎩"],["House","🏠"],["Horse","🐴"],["Hand","✋"]],
+ I:[["Ice","🧊"],["Ink","🖋️"],["Igloo","🛖"],["Insect","🐞"]],
+ J:[["Jug","🏺"],["Jam","🍯"],["Jeep","🚙"],["Juice","🧃"]],
+ K:[["Kite","🪁"],["Key","🔑"],["King","🤴"],["Kettle","🫖"]],
+ L:[["Lion","🦁"],["Leaf","🍃"],["Lamp","💡"],["Lemon","🍋"]],
+ M:[["Mango","🥭"],["Moon","🌙"],["Monkey","🐵"],["Milk","🥛"]],
+ N:[["Nest","🪺"],["Nose","👃"],["Net","🥅"],["Nail","🔩"]],
+ O:[["Orange","🍊"],["Owl","🦉"],["Onion","🧅"],["Ox","🐂"]],
+ P:[["Pen","🖊️"],["Parrot","🦜"],["Pot","🍲"],["Pineapple","🍍"]],
+ Q:[["Queen","👸"],["Quilt","🛏️"],["Quail","🐤"],["Question","❓"]],
+ R:[["Rat","🐀"],["Rain","🌧️"],["Ring","💍"],["Rose","🌹"]],
+ S:[["Sun","☀️"],["Star","⭐"],["Snake","🐍"],["Shoe","👟"]],
+ T:[["Tiger","🐯"],["Tree","🌳"],["Train","🚂"],["Tomato","🍅"]],
+ U:[["Umbrella","☂️"],["Urn","🏺"],["Uniform","👔"],["Up","⬆️"]],
+ V:[["Van","🚐"],["Violin","🎻"],["Vase","🏵️"],["Vegetables","🥦"]],
+ W:[["Watch","⌚"],["Water","💧"],["Whale","🐋"],["Window","🪟"]],
+ X:[["Xylophone","🎹"],["X-ray","🩻"],["Box","📦"],["Fox","🦊"]],
+ Y:[["Yak","🐃"],["Yarn","🧶"],["Yellow","💛"],["Yo-yo","🪀"]],
+ Z:[["Zebra","🦓"],["Zip","🤐"],["Zoo","🎪"],["Zero","0️⃣"]]
+};
+
+/* Telugu: [letter, roman, [ [word, roman, meaning, emoji] x4 ] ] */
+const TE_VOWELS = [
+ ["అ","a",[["అమ్మ","amma","mother","👩"],["అన్నం","annam","rice","🍚"],["అరటి","araṭi","banana","🍌"],["అడవి","aḍavi","forest","🌲"]]],
+ ["ఆ","ā",[["ఆవు","āvu","cow","🐄"],["ఆకు","āku","leaf","🍃"],["ఆట","āṭa","game","🎲"],["ఆకాశం","ākāśaṁ","sky","🌌"]]],
+ ["ఇ","i",[["ఇల్లు","illu","house","🏠"],["ఇటుక","iṭuka","brick","🧱"],["ఇనుము","inumu","iron","⚙️"],["ఇసుక","isuka","sand","🏖️"]]],
+ ["ఈ","ī",[["ఈగ","īga","fly","🪰"],["ఈత","īta","swimming","🏊"],["ఈక","īka","feather","🪶"],["ఈశ్వరుడు","īśvaruḍu","God","🕉️"]]],
+ ["ఉ","u",[["ఉడుత","uḍuta","squirrel","🐿️"],["ఉంగరం","uṅgaraṁ","ring","💍"],["ఉప్పు","uppu","salt","🧂"],["ఉదయం","udayaṁ","morning","🌅"]]],
+ ["ఊ","ū",[["ఊయల","ūyala","cradle","🛏️"],["ఊరు","ūru","village","🏘️"],["ఊదా","ūdā","purple","🟣"],["ఊట","ūṭa","spring water","💧"]]],
+ ["ఋ","ru",[["ఋషి","ruṣi","sage","🧘"],["ఋతువు","rutuvu","season","🍂"],["ఋణం","ruṇaṁ","loan","💰"],["ఋగ్వేదం","rugvēdaṁ","Rigveda","📜"]]],
+ ["ఎ","e",[["ఎలుక","eluka","rat","🐀"],["ఎద్దు","eddu","ox","🐂"],["ఎముక","emuka","bone","🦴"],["ఎరుపు","erupu","red","🔴"]]],
+ ["ఏ","ē",[["ఏనుగు","ēnugu","elephant","🐘"],["ఏడు","ēḍu","seven","7️⃣"],["ఏరు","ēru","stream","🏞️"],["ఏలకులు","ēlakulu","cardamom","🌿"]]],
+ ["ఐ","ai",[["ఐదు","aidu","five","5️⃣"],["ఐక్యత","aikyata","unity","🤝"],["ఐరావతం","airāvataṁ","Airavata","🐘"],["ఐశ్వర్యం","aiśvaryaṁ","wealth","💎"]]],
+ ["ఒ","o",[["ఒంటె","oṇṭe","camel","🐫"],["ఒకటి","okaṭi","one","1️⃣"],["ఒడి","oḍi","lap","🤱"],["ఒడ్డు","oḍḍu","shore","🏖️"]]],
+ ["ఓ","ō",[["ఓడ","ōḍa","ship","🚢"],["ఓటు","ōṭu","vote","🗳️"],["ఓర్పు","ōrpu","patience","🧘"],["ఓంకారం","ōṅkāraṁ","Om","🕉️"]]],
+ ["ఔ","au",[["ఔషధం","auṣadhaṁ","medicine","💊"],["ఔను","aunu","yes","✅"],["ఔదార్యం","audāryaṁ","generosity","🎁"],["ఔన్నత్యం","aunnatyaṁ","greatness","⛰️"]]],
+ ["అం","aṁ",[["అంగడి","aṅgaḍi","shop","🏪"],["అందం","andaṁ","beauty","🌺"],["అంబరం","ambaraṁ","sky","☁️"],["అంతరిక్షం","antarikṣaṁ","space","🚀"]]],
+ ["అః","aḥ",[["నమః","namaḥ","salutation","🙏"],["దుఃఖం","duḥkhaṁ","sorrow","😢"],["ప్రాతః","prātaḥ","dawn","🌄"],["అంతఃపురం","antaḥpuraṁ","palace inner court","🏰"]]]
+];
+
+const TE_CONS = [
+ ["క","ka",[["కమలం","kamalaṁ","lotus","🪷"],["కలం","kalaṁ","pen","🖊️"],["కప్ప","kappa","frog","🐸"],["కుక్క","kukka","dog","🐶"]]],
+ ["ఖ","kha",[["ఖడ్గం","khaḍgaṁ","sword","🗡️"],["ఖజానా","khajānā","treasury","💰"],["ఖర్జూరం","kharjūraṁ","dates","🌴"],["ఖగం","khagaṁ","bird","🐦"]]],
+ ["గ","ga",[["గడియారం","gaḍiyāraṁ","clock","⏰"],["గుడి","guḍi","temple","🛕"],["గాలి","gāli","wind","🌬️"],["గుర్రం","gurraṁ","horse","🐴"]]],
+ ["ఘ","gha",[["ఘంట","ghaṇṭa","bell","🔔"],["ఘటం","ghaṭaṁ","pot","🏺"],["ఘనం","ghanaṁ","cube","🧊"],["ఘర్షణ","gharṣaṇa","friction","🔥"]]],
+ ["ఙ","ṅa",[["వాఙ్మయం","vāṅmayaṁ","literature","📚"],["ప్రాఙ్ముఖం","prāṅmukhaṁ","facing east","🧭"],["అఙ్గం","aṅgaṁ","limb","💪"],["రఙ్గం","raṅgaṁ","stage","🎭"]]],
+ ["చ","ca",[["చెట్టు","ceṭṭu","tree","🌳"],["చేప","cēpa","fish","🐟"],["చందమామ","candamāma","moon","🌙"],["చిలుక","ciluka","parrot","🦜"]]],
+ ["ఛ","cha",[["ఛత్రం","chatraṁ","umbrella","☂️"],["ఛాయ","chāya","shadow","🌑"],["ఛందస్సు","chandassu","metre","📖"],["ఛాతి","chāti","chest","🫁"]]],
+ ["జ","ja",[["జింక","jiṅka","deer","🦌"],["జడ","jaḍa","braid","👧"],["జాబిలి","jābili","moon","🌕"],["జామ","jāma","guava","🍐"]]],
+ ["ఝ","jha",[["ఝరి","jhari","waterfall","🏞️"],["ఝంఝా","jhañjhā","storm","🌪️"],["ఝషం","jhaṣaṁ","fish","🐠"],["ఝుమ్మని","jhummani","humming","🐝"]]],
+ ["ఞ","ña",[["జ్ఞానం","jñānaṁ","knowledge","📘"],["యజ్ఞం","yajñaṁ","fire ritual","🔥"],["విజ్ఞానం","vijñānaṁ","science","🔬"],["అజ్ఞాతం","ajñātaṁ","unknown","❓"]]],
+ ["ట","ṭa",[["టమాటా","ṭamāṭā","tomato","🍅"],["టోపీ","ṭōpī","cap","🧢"],["టపాకాయ","ṭapākāya","firecracker","🧨"],["టికెట్","ṭikeṭ","ticket","🎟️"]]],
+ ["ఠ","ṭha",[["మఠం","maṭhaṁ","monastery","🛕"],["కఠినం","kaṭhinaṁ","hard","🪨"],["పఠనం","paṭhanaṁ","reading","📖"],["ఠీవి","ṭhīvi","grandeur","👑"]]],
+ ["డ","ḍa",[["డబ్బు","ḍabbu","money","💵"],["డోలు","ḍōlu","drum","🥁"],["డేగ","ḍēga","eagle","🦅"],["డిబ్బీ","ḍibbī","small box","📦"]]],
+ ["ఢ","ḍha",[["ఢంకా","ḍhaṅkā","war drum","🥁"],["ఢిల్లీ","ḍhillī","Delhi","🏛️"],["ఢమరుకం","ḍhamarukaṁ","damaru","🪘"],["గఢం","gaḍhaṁ","fort","🏰"]]],
+ ["ణ","ṇa",[["గణపతి","gaṇapati","Ganapati","🐘"],["వీణ","vīṇa","veena","🎻"],["ప్రాణం","prāṇaṁ","life","💓"],["బాణం","bāṇaṁ","arrow","🏹"]]],
+ ["త","ta",[["తామర","tāmara","lotus","🪷"],["తలుపు","talupu","door","🚪"],["తాబేలు","tābēlu","tortoise","🐢"],["తేనె","tēne","honey","🍯"]]],
+ ["థ","tha",[["రథం","rathaṁ","chariot","🛺"],["కథ","katha","story","📖"],["పథకం","pathakaṁ","scheme","📋"],["గాథ","gātha","ballad","🎶"]]],
+ ["ద","da",[["దీపం","dīpaṁ","lamp","🪔"],["దండ","daṇḍa","garland","🌼"],["దూది","dūdi","cotton","☁️"],["దుప్పటి","duppaṭi","blanket","🛏️"]]],
+ ["ధ","dha",[["ధనుస్సు","dhanussu","bow","🏹"],["ధాన్యం","dhānyaṁ","grain","🌾"],["ధైర్యం","dhairyaṁ","courage","🦁"],["ధూపం","dhūpaṁ","incense","🪔"]]],
+ ["న","na",[["నక్క","nakka","fox","🦊"],["నది","nadi","river","🏞️"],["నెమలి","nemali","peacock","🦚"],["నవ్వు","navvu","smile","😊"]]],
+ ["ప","pa",[["పండు","paṇḍu","fruit","🍎"],["పులి","puli","tiger","🐯"],["పువ్వు","puvvu","flower","🌸"],["పాము","pāmu","snake","🐍"]]],
+ ["ఫ","pha",[["ఫలం","phalaṁ","fruit","🍏"],["ఫణి","phaṇi","serpent","🐍"],["ఫలకం","phalakaṁ","board","🪧"],["ఫిరంగి","phiraṅgi","cannon","💣"]]],
+ ["బ","ba",[["బడి","baḍi","school","🏫"],["బంతి","banti","ball","⚽"],["బాతు","bātu","duck","🦆"],["బొమ్మ","bomma","doll","🧸"]]],
+ ["భ","bha",[["భూమి","bhūmi","earth","🌍"],["భవనం","bhavanaṁ","building","🏢"],["భయం","bhayaṁ","fear","😨"],["భజన","bhajana","devotional song","🎵"]]],
+ ["మ","ma",[["మామిడి","māmiḍi","mango","🥭"],["మబ్బు","mabbu","cloud","☁️"],["మేక","mēka","goat","🐐"],["మల్లె","malle","jasmine","🤍"]]],
+ ["య","ya",[["యంత్రం","yantraṁ","machine","⚙️"],["యాత్ర","yātra","journey","🧳"],["యోగం","yōgaṁ","yoga","🧘"],["యుద్ధం","yuddhaṁ","war","⚔️"]]],
+ ["ర","ra",[["రథం","rathaṁ","chariot","🛺"],["రాయి","rāyi","stone","🪨"],["రంగు","raṅgu","colour","🎨"],["రొట్టె","roṭṭe","bread","🍞"]]],
+ ["ల","la",[["లడ్డు","laḍḍu","laddu","🍥"],["లత","lata","creeper","🌿"],["లేడి","lēḍi","deer","🦌"],["లంక","laṅka","Lanka","🏝️"]]],
+ ["వ","va",[["వంట","vaṇṭa","cooking","🍳"],["వాన","vāna","rain","🌧️"],["వెలుగు","velugu","light","💡"],["వడ్రంగి","vaḍraṅgi","carpenter","🪚"]]],
+ ["శ","śa",[["శంఖం","śaṅkhaṁ","conch","🐚"],["శిల","śila","rock","🪨"],["శని","śani","Saturn","🪐"],["శరీరం","śarīraṁ","body","🧍"]]],
+ ["ష","ṣa",[["భాష","bhāṣa","language","🗣️"],["షట్కోణం","ṣaṭkōṇaṁ","hexagon","⬡"],["షడ్రసాలు","ṣaḍrasālu","six tastes","🍽️"],["వర్షం","varṣaṁ","rain","🌧️"]]],
+ ["స","sa",[["సముద్రం","samudraṁ","sea","🌊"],["సూర్యుడు","sūryuḍu","sun","☀️"],["సింహం","siṁhaṁ","lion","🦁"],["సబ్బు","sabbu","soap","🧼"]]],
+ ["హ","ha",[["హంస","haṁsa","swan","🦢"],["హారం","hāraṁ","necklace","📿"],["హనుమంతుడు","hanumantuḍu","Hanuman","🐒"],["హరివిల్లు","harivillu","rainbow","🌈"]]],
+ ["ళ","ḷa",[["కళ","kaḷa","art","🎨"],["కళ్ళు","kaḷḷu","eyes","👀"],["పళ్ళు","paḷḷu","teeth","🦷"],["మళ్ళీ","maḷḷī","again","🔁"]]],
+ ["క్ష","kṣa",[["క్షమ","kṣama","forgiveness","🙏"],["క్షీరం","kṣīraṁ","milk","🥛"],["క్షణం","kṣaṇaṁ","moment","⏱️"],["రక్షణ","rakṣaṇa","protection","🛡️"]]],
+ ["ఱ","ṟa",[["కఱ్ఱ","kaṟṟa","stick","🪵"],["ఏఱు","ēṟu","stream","🏞️"],["ఱంపం","ṟampaṁ","saw","🪚"],["పుఱ్ఱె","puṟṟe","skull","💀"]]]
+];
+
+/* Numbers */
+const EN_ONES=["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"];
+const EN_TENS={20:"Twenty",30:"Thirty",40:"Forty",50:"Fifty",60:"Sixty",70:"Seventy",80:"Eighty",90:"Ninety"};
+const TE_ONES=["","ఒకటి","రెండు","మూడు","నాలుగు","ఐదు","ఆరు","ఏడు","ఎనిమిది","తొమ్మిది","పది","పదకొండు","పన్నెండు","పదమూడు","పద్నాలుగు","పదిహేను","పదహారు","పదిహేడు","పద్దెనిమిది","పంతొమ్మిది"];
+const TE_TENS={20:"ఇరవై",30:"ముప్పై",40:"నలభై",50:"యాభై",60:"అరవై",70:"డెబ్బై",80:"ఎనభై",90:"తొంభై"};
+const RO_ONES=["","okaṭi","reṇḍu","mūḍu","nālugu","aidu","āru","ēḍu","enimidi","tommidi","padi","padakoṇḍu","panneṇḍu","padamūḍu","padnālugu","padihēnu","padahāru","padihēḍu","paddenimidi","pantommidi"];
+const RO_TENS={20:"iravai",30:"muppai",40:"nalabhai",50:"yābhai",60:"aravai",70:"ḍebbai",80:"enabhai",90:"tombhai"};
+
+function enSpell(n){
+  if(n===100) return "One Hundred";
+  if(n<20) return EN_ONES[n];
+  const t=Math.floor(n/10)*10,u=n%10;
+  return EN_TENS[t]+(u?" "+EN_ONES[u]:"");
+}
+function teSpell(n){
+  if(n===100) return "వంద";
+  if(n<20) return TE_ONES[n];
+  const t=Math.floor(n/10)*10,u=n%10;
+  return TE_TENS[t]+(u?" "+TE_ONES[u]:"");
+}
+function roSpell(n){
+  if(n===100) return "vanda";
+  if(n<20) return RO_ONES[n];
+  const t=Math.floor(n/10)*10,u=n%10;
+  return RO_TENS[t]+(u?" "+RO_ONES[u]:"");
+}
+
+/* Build item lists */
+const ITEMS={
+  english:"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map(c=>({
+    id:c, glyph:c, lower:c.toLowerCase(), roman:c+" "+c.toLowerCase(),
+    words:EN_WORDS[c].map(w=>({w:w[0],e:w[1],lang:"en-IN"}))
+  })),
+  telugu:[
+    ...TE_VOWELS.map(v=>({id:v[0],glyph:v[0],roman:v[1],group:"అచ్చులు · Vowels",
+      words:v[2].map(w=>({w:w[0],r:w[1],m:w[2],e:w[3],lang:"te-IN"}))})),
+    ...TE_CONS.map(v=>({id:v[0],glyph:v[0],roman:v[1],group:"హల్లులు · Consonants",
+      words:v[2].map(w=>({w:w[0],r:w[1],m:w[2],e:w[3],lang:"te-IN"}))}))
+  ],
+  numbers:Array.from({length:100},(_,i)=>{
+    const n=i+1;
+    return {id:String(n),glyph:String(n),n,en:enSpell(n),te:teSpell(n),roman:roSpell(n)};
+  })
+};
+const MODE_TITLE={english:["English","A to Z"],telugu:["తెలుగు అక్షరాలు","Telugu letters"],numbers:["Numbers","1 to 100"]};
+
+/* ============================================================
+   STATE + STORAGE
+   ============================================================ */
+const S={mode:null,index:0,chalk:"#F2F4EE",showGuide:true,lower:false,strokes:[],done:{}};
+const mem={};
+async function loadDone(){
+  try{const r=await window.storage.get("slate-progress");if(r&&r.value)S.done=JSON.parse(r.value);}
+  catch(e){ if(mem.p) S.done=mem.p; }
+}
+async function saveDone(){
+  mem.p=S.done;
+  try{await window.storage.set("slate-progress",JSON.stringify(S.done));}catch(e){}
+}
+
+/* ============================================================
+   SPEECH
+   ============================================================ */
+let voices=[];
+function refreshVoices(){ try{voices=speechSynthesis.getVoices()||[];}catch(e){voices=[];} }
+refreshVoices();
+if(window.speechSynthesis) speechSynthesis.onvoiceschanged=refreshVoices;
+function pickVoice(lang){
+  if(!voices.length) refreshVoices();
+  const base=lang.split("-")[0];
+  return voices.find(v=>v.lang&&v.lang.replace("_","-").toLowerCase()===lang.toLowerCase())
+      || voices.find(v=>v.lang&&v.lang.toLowerCase().startsWith(base))
+      || (base==="te" ? voices.find(v=>v.lang&&/^(hi|kn|ta)/i.test(v.lang)) : null)
+      || null;
+}
+function speak(text,lang){
+  if(!window.speechSynthesis) return;
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang=lang; u.rate=lang.startsWith("te")?.78:.85; u.pitch=1.05;
+    const v=pickVoice(lang); if(v) u.voice=v;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+const $=id=>document.getElementById(id);
+const screens={home:$("home"),grid:$("grid"),trace:$("trace")};
+function show(name){
+  Object.entries(screens).forEach(([k,el])=>el.classList.toggle("hidden",k!==name));
+  window.scrollTo({top:0,behavior:"instant"in window?"instant":"auto"});
+}
+document.querySelectorAll(".track").forEach(b=>b.addEventListener("click",()=>openGrid(b.dataset.mode)));
+$("grid").querySelector('[data-go="home"]').addEventListener("click",()=>{S.mode=null;show("home");});
+$("toGrid").addEventListener("click",()=>{openGrid(S.mode);});
+
+function openGrid(mode){
+  S.mode=mode;
+  const t=MODE_TITLE[mode];
+  $("gridTitle").innerHTML=`${t[0]}<small>${t[1]}</small>`;
+  const body=$("gridBody"); body.innerHTML="";
+  const list=ITEMS[mode];
+  if(mode==="telugu"){
+    let cur=null,g=null;
+    list.forEach((it,i)=>{
+      if(it.group!==cur){
+        cur=it.group;
+        const h=document.createElement("div");h.className="gsection";
+        h.innerHTML=`<b>${cur.split(" · ")[0]}</b> · ${cur.split(" · ")[1]}`;
+        body.appendChild(h);
+        g=document.createElement("div");g.className="grid";body.appendChild(g);
+      }
+      g.appendChild(makeTile(it,i,mode));
+    });
+  }else{
+    const g=document.createElement("div");
+    g.className="grid"+(mode==="numbers"?" num":"");
+    list.forEach((it,i)=>g.appendChild(makeTile(it,i,mode)));
+    body.appendChild(g);
+  }
+  show("grid");
+}
+function makeTile(it,i,mode){
+  const b=document.createElement("button");
+  b.className="tile"+(mode==="numbers"?" num":"")+(S.done[mode+":"+it.id]?" done":"");
+  b.innerHTML = mode==="english"
+      ? `${it.glyph}<span class="sub">${it.lower}</span>`
+      : mode==="telugu"
+      ? `${it.glyph}<span class="sub">${it.roman}</span>`
+      : `${it.glyph}`;
+  b.addEventListener("click",()=>openTrace(i));
+  return b;
+}
+
+/* ============================================================
+   TRACE SCREEN
+   ============================================================ */
+const CHALKS=[["#F2F4EE","White"],["#F6C445","Yellow"],["#F58AA3","Pink"],["#7FD3E4","Blue"],["#A6D96A","Green"]];
+const chalkBox=$("chalks");
+CHALKS.forEach(([c,name],i)=>{
+  const b=document.createElement("button");
+  b.className="chalk-stick";b.style.background=c;b.title=name;b.setAttribute("aria-label",name+" chalk");
+  b.setAttribute("aria-pressed",i===0?"true":"false");
+  b.addEventListener("click",()=>{
+    S.chalk=c;
+    [...chalkBox.children].forEach(x=>x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");
+  });
+  chalkBox.appendChild(b);
+});
+
+const guideCv=$("guide"), inkCv=$("ink");
+const gctx=guideCv.getContext("2d"), ictx=inkCv.getContext("2d");
+let maskCv=document.createElement("canvas"), mctx=maskCv.getContext("2d");
+let W=0,H=0,DPR=1,BRUSH=22;
+
+function currentItem(){ return ITEMS[S.mode][S.index]; }
+function currentGlyph(){
+  const it=currentItem();
+  if(S.mode==="english") return S.lower?it.lower:it.glyph;
+  return it.glyph;
+}
+
+function sizeCanvases(){
+  const rect=inkCv.getBoundingClientRect();
+  DPR=Math.min(window.devicePixelRatio||1,2.5);
+  W=Math.round(rect.width*DPR); H=Math.round(rect.height*DPR);
+  if(!W||!H) return false;
+  [guideCv,inkCv,maskCv].forEach(c=>{c.width=W;c.height=H;});
+  BRUSH=Math.max(12,Math.round(rect.width*DPR*0.055));
+  return true;
+}
+
+function fitFont(ctx,text,maxW,maxH){
+  let size=maxH;
+  for(let i=0;i<28;i++){
+    ctx.font=`700 ${size}px 'Baloo Tammudu 2', 'Noto Sans Telugu', sans-serif`;
+    const m=ctx.measureText(text);
+    const w=m.width;
+    const h=(m.actualBoundingBoxAscent||size*0.75)+(m.actualBoundingBoxDescent||size*0.25);
+    if(w<=maxW&&h<=maxH) break;
+    size*=Math.min(maxW/Math.max(w,1),maxH/Math.max(h,1))*0.97;
+  }
+  return size;
+}
+
+function drawGuide(){
+  gctx.clearRect(0,0,W,H);
+  mctx.clearRect(0,0,W,H);
+  const text=currentGlyph();
+  const cx=W/2, cy=H/2;
+
+  // ruled practice lines (chalk)
+  gctx.save();
+  gctx.strokeStyle="rgba(242,244,238,.18)";gctx.lineWidth=Math.max(1,DPR);
+  const top=H*0.20, base=H*0.80, mid=(top+base)/2;
+  [[top,false],[mid,true],[base,false]].forEach(([y,dash])=>{
+    gctx.setLineDash(dash?[8*DPR,9*DPR]:[]);
+    gctx.beginPath();gctx.moveTo(W*0.06,y);gctx.lineTo(W*0.94,y);gctx.stroke();
+  });
+  gctx.restore();
+
+  const size=fitFont(gctx,text,W*0.80,H*0.62);
+  gctx.textAlign="center"; gctx.textBaseline="middle";
+  gctx.font=`700 ${size}px 'Baloo Tammudu 2', 'Noto Sans Telugu', sans-serif`;
+
+  if(S.showGuide){
+    gctx.save();
+    gctx.fillStyle="rgba(242,244,238,.13)";
+    gctx.fillText(text,cx,cy);
+    gctx.setLineDash([10*DPR,9*DPR]);
+    gctx.lineWidth=Math.max(2,2.2*DPR);
+    gctx.strokeStyle="rgba(242,244,238,.5)";
+    gctx.strokeText(text,cx,cy);
+    gctx.restore();
+  }
+
+  // mask for scoring: filled glyph, thickened by brush size
+  mctx.save();
+  mctx.textAlign="center";mctx.textBaseline="middle";
+  mctx.font=`700 ${size}px 'Baloo Tammudu 2', 'Noto Sans Telugu', sans-serif`;
+  mctx.fillStyle="#fff";mctx.strokeStyle="#fff";
+  mctx.lineJoin="round";mctx.lineCap="round";
+  mctx.lineWidth=BRUSH*0.9;
+  mctx.strokeText(text,cx,cy);
+  mctx.fillText(text,cx,cy);
+  mctx.restore();
+}
+
+/* ---- drawing ---- */
+let drawing=false,last=null;
+function pos(e){
+  const r=inkCv.getBoundingClientRect();
+  return {x:(e.clientX-r.left)*(W/r.width), y:(e.clientY-r.top)*(H/r.height)};
+}
+function strokeSeg(a,b,color){
+  ictx.save();
+  ictx.lineCap="round";ictx.lineJoin="round";
+  ictx.strokeStyle=color;ictx.lineWidth=BRUSH;
+  ictx.globalAlpha=.92;
+  ictx.beginPath();ictx.moveTo(a.x,a.y);ictx.lineTo(b.x,b.y);ictx.stroke();
+  // chalk grain
+  ictx.globalAlpha=.22;ictx.fillStyle=color;
+  for(let i=0;i<4;i++){
+    const t=Math.random();
+    const x=a.x+(b.x-a.x)*t+(Math.random()-.5)*BRUSH*1.15;
+    const y=a.y+(b.y-a.y)*t+(Math.random()-.5)*BRUSH*1.15;
+    ictx.beginPath();ictx.arc(x,y,Math.random()*2.2*DPR,0,7);ictx.fill();
+  }
+  ictx.restore();
+}
+function redraw(){
+  ictx.clearRect(0,0,W,H);
+  S.strokes.forEach(s=>{
+    for(let i=1;i<s.pts.length;i++) strokeSeg(s.pts[i-1],s.pts[i],s.color);
+    if(s.pts.length===1) strokeSeg(s.pts[0],s.pts[0],s.color);
+  });
+}
+inkCv.addEventListener("pointerdown",e=>{
+  e.preventDefault(); inkCv.setPointerCapture(e.pointerId);
+  drawing=true; last=pos(e);
+  S.strokes.push({color:S.chalk,pts:[last]});
+  strokeSeg(last,last,S.chalk);
+});
+inkCv.addEventListener("pointermove",e=>{
+  if(!drawing) return;
+  const p=pos(e);
+  S.strokes[S.strokes.length-1].pts.push(p);
+  strokeSeg(last,p,S.chalk); last=p;
+});
+["pointerup","pointercancel","pointerleave"].forEach(t=>
+  inkCv.addEventListener(t,()=>{drawing=false;last=null;}));
+
+$("undo").addEventListener("click",()=>{S.strokes.pop();redraw();});
+$("wipe").addEventListener("click",()=>{S.strokes=[];redraw();});
+$("guideBtn").addEventListener("click",()=>{
+  S.showGuide=!S.showGuide;
+  $("guideBtn").textContent=S.showGuide?"Guide on":"Guide off";
+  $("guideBtn").setAttribute("aria-pressed",String(S.showGuide));
+  drawGuide();
+});
+$("caseBtn").addEventListener("click",()=>{
+  S.lower=!S.lower; S.strokes=[]; redraw(); drawGuide(); paintTitle();
+});
+$("starClose").addEventListener("click",()=>$("stars").classList.remove("show"));
+
+/* ---- scoring ---- */
+function check(){
+  if(!S.strokes.length){ showStars(0,"Draw on the letter first"); return; }
+  const m=mctx.getImageData(0,0,W,H).data;
+  const k=ictx.getImageData(0,0,W,H).data;
+  let need=0,hit=0,spill=0;
+  const step=4*2; // sample every 2nd pixel for speed
+  for(let i=3;i<m.length;i+=step*1){
+    const inMask=m[i]>60, inInk=k[i]>60;
+    if(inMask){need++; if(inInk)hit++;}
+    else if(inInk) spill++;
+  }
+  if(!need){showStars(0,"Try again");return;}
+  const cover=hit/need;
+  const messy=spill/Math.max(need,1);
+  const score=Math.max(0,cover-messy*0.35);
+  let stars=0,msg="Keep practising!";
+  if(score>=0.72){stars=3;msg="Perfect! Beautiful writing";}
+  else if(score>=0.5){stars=2;msg="Very good — fill it in a bit more";}
+  else if(score>=0.28){stars=1;msg="Good start — stay on the dotted letter";}
+  showStars(stars,msg,Math.round(cover*100));
+  if(stars>=2){ S.done[S.mode+":"+currentItem().id]=true; saveDone(); }
+}
+function showStars(n,msg,pct){
+  $("starRow").textContent="★".repeat(n)+"☆".repeat(3-n);
+  $("starMsg").innerHTML=msg+(pct!=null?`<br><span style="font:600 12px 'Mulish';opacity:.7">${pct}% of the letter covered</span>`:"");
+  $("stars").classList.add("show");
+}
+$("checkBtn").addEventListener("click",check);
+
+/* ---- hear ---- */
+$("hearBtn").addEventListener("click",()=>{
+  const it=currentItem();
+  if(S.mode==="english") speak(S.lower?it.lower:it.glyph,"en-IN");
+  else if(S.mode==="telugu") speak(it.glyph,"te-IN");
+  else speak(it.en,"en-IN");
+});
+
+/* ---- render ---- */
+function paintTitle(){
+  const it=currentItem(),t=MODE_TITLE[S.mode];
+  const label = S.mode==="english" ? `${it.glyph} ${it.lower}`
+              : S.mode==="telugu" ? `${it.glyph}`
+              : `${it.glyph}`;
+  $("traceTitle").innerHTML=`${label}<small>${t[0]} · ${S.index+1} of ${ITEMS[S.mode].length}</small>`;
+  $("roman").textContent = S.mode==="telugu"?it.roman : S.mode==="numbers"?it.en:(S.lower?"small letter":"capital letter");
+}
+
+function renderDetail(){
+  const it=currentItem(), d=$("detail");
+  if(S.mode==="numbers"){
+    const dots=Array.from({length:100},(_,i)=>`<div class="dot${i<it.n?" on":""}"></div>`).join("");
+    d.innerHTML=`
+      <div class="numinfo">
+        <button class="numcard" data-say="${it.en}" data-lang="en-IN">
+          <div><span class="lbl">English spelling</span><span class="val">${it.en}</span></div>
+          <span class="spk" style="margin-left:auto">🔊</span>
+        </button>
+        <button class="numcard" data-say="${it.te}" data-lang="te-IN">
+          <div><span class="lbl">తెలుగులో</span><span class="val">${it.te}</span><span class="rom">${it.roman}</span></div>
+          <span class="spk" style="margin-left:auto">🔊</span>
+        </button>
+      </div>
+      <div class="dots"><div class="lbl">Count them — ${it.n} of 100</div><div class="dotgrid">${dots}</div></div>`;
+  }else{
+    const heading = S.mode==="english" ? "Four words with "+it.glyph : "ఈ అక్షరంతో నాలుగు పదాలు";
+    d.innerHTML=`<div class="words"><p class="wtitle">${heading}</p>`+
+      it.words.map(w=>`
+        <button class="word" data-say="${w.w}" data-lang="${w.lang}">
+          <span class="emo">${w.e}</span>
+          <span class="txt"><strong>${w.w}</strong>${w.r?`<em>${w.r} — ${w.m}</em>`:""}</span>
+          <span class="spk">🔊</span>
+        </button>`).join("")+`</div>`;
+  }
+  d.querySelectorAll("[data-say]").forEach(b=>
+    b.addEventListener("click",()=>speak(b.dataset.say,b.dataset.lang)));
+}
+
+function openTrace(i){
+  S.index=i; S.strokes=[];
+  $("caseBtn").classList.toggle("hidden",S.mode!=="english");
+  document.querySelector(".rowbtns").style.gridTemplateColumns =
+    S.mode==="english" ? "1fr 1.5fr 1fr" : "2fr 1fr";
+  show("trace");
+  paintTitle(); renderDetail();
+  $("prev").disabled=i===0;
+  $("next").disabled=i===ITEMS[S.mode].length-1;
+  $("stars").classList.remove("show");
+  requestAnimationFrame(()=>{ if(sizeCanvases()){ ictx.clearRect(0,0,W,H); drawGuide(); } });
+}
+$("prev").addEventListener("click",()=>openTrace(Math.max(0,S.index-1)));
+$("next").addEventListener("click",()=>openTrace(Math.min(ITEMS[S.mode].length-1,S.index+1)));
+
+let rt;
+window.addEventListener("resize",()=>{
+  if(screens.trace.classList.contains("hidden")) return;
+  clearTimeout(rt);
+  rt=setTimeout(()=>{ if(sizeCanvases()){ drawGuide(); redraw(); } },140);
+});
+
+/* boot */
+(async function(){
+  await loadDone();
+  try{
+    await document.fonts.load("700 120px 'Baloo Tammudu 2'");
+    await document.fonts.ready;
+  }catch(e){}
+  if(!screens.trace.classList.contains("hidden")){ sizeCanvases(); drawGuide(); }
+})();
+</script>
+</body>
+</html>
