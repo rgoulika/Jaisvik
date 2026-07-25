@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
+<meta name="theme-color" content="#EFEAFF"/>
+<title>Talk Time — English speaking for little kids</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+/* ============ tokens ============ */
+:root{
+  --ink:#2B2140;
+  --paper:#EFEAFF;
+  --card:#FFFFFF;
+  --mango:#FF9F1C;
+  --berry:#FF5D8F;
+  --leaf:#2EC4B6;
+  --sky:#4CC9F0;
+  --grape:#7C4DFF;
+  --line:4px;
+  --r:26px;
+  --shadow:6px 6px 0 var(--ink);
+  --shadow-sm:4px 4px 0 var(--ink);
+  --display:'Fredoka', ui-rounded, 'SF Pro Rounded', 'Segoe UI Variable', system-ui, sans-serif;
+  --body:'Nunito', ui-rounded, system-ui, sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--body);font-weight:800;
+  overscroll-behavior:none;
+  -webkit-user-select:none;user-select:none;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+#app{max-width:520px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;padding:14px 16px 22px}
+
+/* ============ shared bits ============ */
+.bar{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.pill{
+  display:inline-flex;align-items:center;gap:7px;background:var(--card);
+  border:var(--line) solid var(--ink);border-radius:999px;
+  padding:8px 15px;font-family:var(--display);font-weight:700;font-size:19px;
+  box-shadow:var(--shadow-sm)
+}
+.icon-btn{
+  width:54px;height:54px;flex:0 0 54px;border-radius:50%;background:var(--card);
+  border:var(--line) solid var(--ink);box-shadow:var(--shadow-sm);
+  font-size:24px;display:grid;place-items:center;cursor:pointer;padding:0;color:var(--ink)
+}
+.icon-btn:active,.pill:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.spacer{flex:1}
+h1{font-family:var(--display);font-weight:700;font-size:34px;line-height:1.05;margin:2px 0 4px}
+.sub{font-size:15px;font-weight:800;opacity:.62;margin:0 0 18px}
+
+/* ============ home ============ */
+.modes{display:grid;gap:14px}
+.mode{
+  display:flex;align-items:center;gap:16px;text-align:left;
+  border:var(--line) solid var(--ink);border-radius:var(--r);box-shadow:var(--shadow);
+  padding:18px 18px;cursor:pointer;color:var(--ink);font-family:var(--display);font-weight:700
+}
+.mode:active{transform:translate(4px,4px);box-shadow:2px 2px 0 var(--ink)}
+.mode .em{font-size:44px;line-height:1}
+.mode .t{font-size:25px;line-height:1.1}
+.mode .d{font-family:var(--body);font-weight:800;font-size:13px;opacity:.7;margin-top:3px}
+.m1{background:var(--mango)}.m2{background:var(--sky)}.m3{background:var(--berry)}.m4{background:var(--leaf)}
+
+.stickers{
+  margin-top:20px;border:var(--line) dashed var(--ink);border-radius:var(--r);
+  padding:14px;background:#fff9
+}
+.stickers h2{font-family:var(--display);font-size:18px;margin:0 0 10px;font-weight:700}
+.sticker-row{display:flex;flex-wrap:wrap;gap:8px}
+.sticker{font-size:30px;filter:saturate(1.1)}
+.sticker.locked{opacity:.18;filter:grayscale(1)}
+
+/* ============ play card ============ */
+.stage{flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px}
+.card{
+  background:var(--card);border:var(--line) solid var(--ink);border-radius:34px;
+  box-shadow:var(--shadow);padding:26px 20px;text-align:center;
+  animation:pop .32s cubic-bezier(.2,1.5,.4,1)
+}
+@keyframes pop{from{transform:scale(.9) translateY(10px);opacity:0}to{transform:none;opacity:1}}
+.big-em{font-size:clamp(78px,26vw,124px);line-height:1;margin:2px 0 10px}
+.word{font-family:var(--display);font-weight:700;font-size:clamp(34px,10vw,48px);letter-spacing:.5px}
+.prompt{font-family:var(--display);font-weight:600;font-size:23px;line-height:1.25}
+.hint{font-size:14px;font-weight:800;opacity:.55;margin-top:8px;min-height:20px}
+.heard{
+  margin-top:10px;font-family:var(--body);font-size:15px;font-weight:800;
+  background:var(--paper);border-radius:14px;padding:8px 12px;display:inline-block;max-width:100%
+}
+
+/* ============ mic (signature) ============ */
+.mic-wrap{position:relative;display:grid;place-items:center;height:196px;margin-top:2px}
+.ring{
+  position:absolute;width:150px;height:150px;border-radius:50%;
+  border:var(--line) solid var(--grape);opacity:0;pointer-events:none
+}
+.listening .ring{animation:ripple 1.7s ease-out infinite}
+.listening .ring:nth-child(2){animation-delay:.55s}
+.listening .ring:nth-child(3){animation-delay:1.1s}
+@keyframes ripple{0%{transform:scale(1);opacity:.75}100%{transform:scale(2.05);opacity:0}}
+.mic{
+  position:relative;width:150px;height:150px;border-radius:50%;
+  background:var(--grape);color:#fff;border:var(--line) solid var(--ink);
+  box-shadow:8px 8px 0 var(--ink);font-size:60px;display:grid;place-items:center;
+  cursor:pointer;transition:transform .07s linear,background .2s
+}
+.mic:active{transform:translate(4px,4px) scale(1);box-shadow:3px 3px 0 var(--ink)}
+.listening .mic{background:var(--berry)}
+.good .mic{background:var(--leaf)}
+.mic-label{
+  font-family:var(--display);font-weight:700;font-size:20px;text-align:center;
+  margin-top:-6px;min-height:26px
+}
+
+/* ============ controls ============ */
+.row{display:flex;gap:12px}
+.btn{
+  flex:1;border:var(--line) solid var(--ink);border-radius:20px;background:var(--card);
+  box-shadow:var(--shadow-sm);padding:15px 10px;font-family:var(--display);font-weight:700;
+  font-size:19px;cursor:pointer;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:8px
+}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn.yes{background:var(--leaf)}
+.btn.hear{background:var(--mango)}
+
+/* ============ fx ============ */
+#fx{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:60}
+.bit{position:absolute;font-size:30px;animation:fall 1.5s ease-in forwards}
+@keyframes fall{0%{transform:translateY(-40px) rotate(0);opacity:1}100%{transform:translateY(105vh) rotate(400deg);opacity:0}}
+.starfly{position:fixed;font-size:44px;z-index:70;pointer-events:none;animation:fly .9s ease-in forwards}
+@keyframes fly{0%{transform:scale(.4);opacity:0}30%{transform:scale(1.4);opacity:1}100%{transform:translateY(-160px) scale(.5);opacity:0}}
+
+/* ============ parent sheet ============ */
+.sheet{
+  position:fixed;inset:0;background:#2B2140cc;display:none;align-items:flex-end;z-index:80
+}
+.sheet.on{display:flex}
+.sheet-in{
+  background:var(--paper);width:100%;max-width:520px;margin:0 auto;
+  border-radius:30px 30px 0 0;border-top:var(--line) solid var(--ink);
+  padding:20px 20px calc(24px + env(safe-area-inset-bottom));max-height:88dvh;overflow:auto
+}
+.sheet h2{font-family:var(--display);font-size:24px;margin:0 0 4px;font-weight:700}
+.sheet .note{font-size:13px;font-weight:800;opacity:.6;margin:0 0 16px;line-height:1.45}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:14px;font-weight:800;margin-bottom:7px}
+.field input,.field select{
+  width:100%;padding:13px 14px;border:3px solid var(--ink);border-radius:16px;
+  background:var(--card);font-family:var(--body);font-weight:800;font-size:16px;color:var(--ink)
+}
+.seg{display:flex;gap:8px}
+.seg button{
+  flex:1;padding:12px 6px;border:3px solid var(--ink);border-radius:16px;background:var(--card);
+  font-family:var(--body);font-weight:800;font-size:14px;cursor:pointer;color:var(--ink)
+}
+.seg button[aria-pressed="true"]{background:var(--grape);color:#fff}
+.warn{background:#FFE7A8;border:3px solid var(--ink);border-radius:16px;padding:11px 13px;font-size:13px;font-weight:800;line-height:1.45;margin-bottom:16px}
+
+:focus-visible{outline:4px solid var(--grape);outline-offset:3px}
+button{font:inherit}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="fx"></div>
+
+<div class="sheet" id="sheet">
+  <div class="sheet-in">
+    <h2>Grown-up settings</h2>
+    <p class="note">Sit next to your child for the first few rounds. Every round ends in a star — the app never tells a child they are wrong.</p>
+    <div id="micWarn"></div>
+    <div class="field">
+      <label for="kidName">Child's name</label>
+      <input id="kidName" type="text" maxlength="16" placeholder="e.g. Aarav" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="kidAge">Age (used in "I am ___ years old")</label>
+      <input id="kidAge" type="number" min="2" max="9" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label>Voice accent</label>
+      <div class="seg" id="segAccent">
+        <button data-v="en-IN">Indian</button>
+        <button data-v="en-US">American</button>
+        <button data-v="en-GB">British</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Speaking speed</label>
+      <div class="seg" id="segRate">
+        <button data-v="0.7">Slow</button>
+        <button data-v="0.85">Normal</button>
+        <button data-v="1">Quick</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>How strictly to judge pronunciation</label>
+      <div class="seg" id="segLen">
+        <button data-v="0.45">Very easy</button>
+        <button data-v="0.6">Easy</button>
+        <button data-v="0.75">Strict</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Microphone</label>
+      <div class="seg" id="segMic">
+        <button data-v="1">Listen &amp; check</button>
+        <button data-v="0">Tap-to-answer only</button>
+      </div>
+    </div>
+    <div class="row">
+      <button class="btn" id="resetBtn">Reset stars</button>
+      <button class="btn yes" id="closeSheet">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* =========================================================
+   Talk Time — English speaking practice for 3–5 year olds
+   Single file. Works offline once loaded. No accounts.
+   ========================================================= */
+
+/* ---------- state + light persistence ---------- */
+const DEFAULTS = {name:"", age:4, accent:"en-IN", rate:0.85, len:0.6, mic:1, stars:0};
+let S = Object.assign({}, DEFAULTS);
+
+async function loadState(){
+  try{
+    if(window.storage){
+      const r = await window.storage.get("talktime");
+      if(r && r.value) S = Object.assign({}, DEFAULTS, JSON.parse(r.value));
+    }
+  }catch(e){ /* first run or no storage — keep defaults */ }
+}
+let saveTimer=null;
+function saveState(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(async()=>{
+    try{ if(window.storage) await window.storage.set("talktime", JSON.stringify(S)); }catch(e){}
+  },300);
+}
+
+/* ---------- content ---------- */
+const WORDS = {
+  Animals:[["dog","🐶"],["cat","🐱"],["cow","🐄"],["elephant","🐘"],["monkey","🐵"],["fish","🐟"],["bird","🐦"],["lion","🦁"],["horse","🐴"],["duck","🦆"],["frog","🐸"],["butterfly","🦋"]],
+  Food:[["apple","🍎"],["banana","🍌"],["milk","🥛"],["bread","🍞"],["rice","🍚"],["egg","🥚"],["water","💧"],["mango","🥭"],["cake","🍰"],["grapes","🍇"],["carrot","🥕"],["ice cream","🍦"]],
+  Colours:[["red","🔴"],["blue","🔵"],["green","🟢"],["yellow","🟡"],["orange","🟠"],["purple","🟣"],["black","⚫"],["white","⚪"],["brown","🟤"],["pink","🌸"]],
+  Body:[["eye","👁️"],["ear","👂"],["nose","👃"],["hand","✋"],["foot","🦶"],["mouth","👄"],["tooth","🦷"],["tongue","👅"],["hair","💇"],["knee","🦵"]],
+  Home:[["bed","🛏️"],["chair","🪑"],["door","🚪"],["spoon","🥄"],["book","📖"],["ball","⚽"],["car","🚗"],["shoe","👟"],["clock","🕐"],["cup","☕"],["key","🔑"],["brush","🪥"]],
+  Family:[["mummy","👩"],["daddy","👨"],["baby","👶"],["sister","👧"],["brother","👦"],["grandma","👵"],["grandpa","👴"]],
+  Actions:[["run","🏃"],["jump","🤸"],["eat","🍽️"],["sleep","😴"],["drink","🥤"],["walk","🚶"],["clap","👏"],["wash","🧼"],["read","📚"],["sing","🎤"],["swim","🏊"],["dance","💃"]],
+  Feelings:[["happy","😀"],["sad","😢"],["angry","😠"],["sleepy","🥱"],["hungry","😋"],["scared","😨"],["surprised","😲"]]
+};
+
+const SENTENCES = [
+  ["Good morning","🌞"],["Thank you","🙏"],["I am happy","😀"],["Please help me","🤝"],
+  ["My name is {name}","🧒"],["I am {age} years old","🎂"],["I want water please","💧"],
+  ["Can I have an apple","🍎"],["I love my mummy","❤️"],["The dog is big","🐶"],
+  ["I can jump","🤸"],["Let us play","🧸"],["How are you","👋"],["See you later","👋"],
+  ["This is my ball","⚽"],["I like ice cream","🍦"],["I am going to school","🎒"],
+  ["The sky is blue","🌤️"],["I brush my teeth","🪥"],["Good night","🌙"],
+  ["May I go please","🚪"],["I am very hungry","🍽️"]
+];
+
+const QUESTIONS = [
+  {q:"What is this?",em:"🐘",a:"elephant",ok:["elephant","an elephant"]},
+  {q:"What is this?",em:"🍌",a:"banana",ok:["banana","a banana"]},
+  {q:"What is this?",em:"🚗",a:"car",ok:["car","a car"]},
+  {q:"What colour is this?",em:"🍎",a:"red",ok:["red","it is red"]},
+  {q:"What colour is this?",em:"🍌",a:"yellow",ok:["yellow","it is yellow"]},
+  {q:"What colour is the grass?",em:"🌿",a:"green",ok:["green"]},
+  {q:"How many?",em:"🐶🐶",a:"two",ok:["two","2"]},
+  {q:"How many?",em:"🍎🍎🍎",a:"three",ok:["three","3"]},
+  {q:"How many?",em:"⭐⭐⭐⭐",a:"four",ok:["four","4"]},
+  {q:"What sound does a dog make?",em:"🐶",a:"woof",ok:["woof","bow","bark","bow wow"]},
+  {q:"What sound does a cat make?",em:"🐱",a:"meow",ok:["meow","meaow","mew"]},
+  {q:"What do we say for a gift?",em:"🎁",a:"thank you",ok:["thank you","thanks","thank u"]},
+  {q:"What do we say in the morning?",em:"🌞",a:"good morning",ok:["good morning","morning"]},
+  {q:"What is your name?",em:"🧒",a:"{name}",ok:["{name}","my name is {name}"]},
+  {q:"How old are you?",em:"🎂",a:"{age}",ok:["{age}","i am {age}","{ageword}","i am {ageword}"]},
+  {q:"Where do you sleep?",em:"🛏️",a:"bed",ok:["bed","on the bed","in my bed"]},
+  {q:"What do we drink?",em:"🥛",a:"milk",ok:["milk","water","juice"]},
+  {q:"Which animal is big?",em:"🐘",a:"elephant",ok:["elephant"]}
+];
+
+const TELLME = [
+  ["What did you eat today?","🍽️"],["Who is your best friend?","🧒"],["What is your favourite toy?","🧸"],
+  ["Tell me about your day","☀️"],["What did you play today?","⚽"],["Which animal do you like?","🦁"],
+  ["What makes you happy?","😀"],["Tell me about mummy","👩"],["Tell me about daddy","👨"],
+  ["What do you want to be?","🚀"],["Tell me a colour you like","🎨"],["What did you see outside?","🌳"]
+];
+
+const STICKERS = ["🌟","🚀","🦄","🐬","🎈","🍩","🦖","🏆","🌈","🐧","🎸","👑"];
+const AGEWORDS = {2:"two",3:"three",4:"four",5:"five",6:"six",7:"seven",8:"eight",9:"nine"};
+
+/* ---------- helpers ---------- */
+const $ = s=>document.querySelector(s);
+const app = $("#app");
+const fill = t => (t||"").replace(/\{name\}/g, S.name||"").replace(/\{age\}/g, S.age)
+                        .replace(/\{ageword\}/g, AGEWORDS[S.age]||S.age);
+const rnd = a => a[Math.floor(Math.random()*a.length)];
+function shuffled(a){const c=a.slice();for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]];}return c;}
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------- speech out ---------- */
+let voice=null;
+function pickVoice(){
+  const vs = speechSynthesis.getVoices ? speechSynthesis.getVoices() : [];
+  if(!vs.length) return;
+  const want = S.accent;
+  const lang = v => (v.lang||"").replace("_","-");
+  voice = vs.find(v=>lang(v)===want && /female|woman|heera|veena|samantha|zira|aria|google/i.test(v.name))
+       || vs.find(v=>lang(v)===want)
+       || vs.find(v=>lang(v).startsWith("en-IN"))
+       || vs.find(v=>lang(v).startsWith("en"))
+       || null;
+}
+if(window.speechSynthesis){
+  pickVoice();
+  speechSynthesis.onvoiceschanged = pickVoice;
+}
+function say(text, onEnd){
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    if(voice) u.voice = voice;
+    u.lang = S.accent; u.rate = S.rate; u.pitch = 1.15; u.volume = 1;
+    if(onEnd) u.onend = onEnd;
+    speechSynthesis.speak(u);
+  }catch(e){ if(onEnd) onEnd(); }
+}
+
+/* ---------- chimes ---------- */
+let ac=null;
+function tone(freqs, dur=0.14, type="sine"){
+  try{
+    ac = ac || new (window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==="suspended") ac.resume();
+    freqs.forEach((f,i)=>{
+      const o=ac.createOscillator(), g=ac.createGain();
+      o.type=type; o.frequency.value=f;
+      const t0=ac.currentTime+i*dur;
+      g.gain.setValueAtTime(0.0001,t0);
+      g.gain.exponentialRampToValueAtTime(0.22,t0+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+      o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0+dur+0.02);
+    });
+  }catch(e){}
+}
+const chimeWin = ()=>tone([523,659,784,1047],0.13);
+const chimeTry = ()=>tone([392,349],0.18,"triangle");
+
+/* ---------- matching ---------- */
+function norm(s){
+  return (s||"").toLowerCase()
+    .replace(/[^a-z0-9\s]/g," ")
+    .replace(/\b(a|an|the|is|it|its|i'm|im)\b/g," ")
+    .replace(/\s+/g," ").trim();
+}
+function lev(a,b){
+  const m=a.length,n=b.length;
+  if(!m) return n; if(!n) return m;
+  let prev=Array.from({length:n+1},(_,i)=>i), cur=new Array(n+1);
+  for(let i=1;i<=m;i++){
+    cur[0]=i;
+    for(let j=1;j<=n;j++){
+      cur[j]=Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    }
+    [prev,cur]=[cur,prev];
+  }
+  return prev[n];
+}
+const sim = (a,b)=>{const m=Math.max(a.length,b.length); return m? 1-lev(a,b)/m : 1;};
+
+function matches(heardList, target, accepts){
+  const L = S.len;
+  const t = norm(fill(target));
+  if(!t) return false;
+  const tw = t.split(" ");
+  const pool = [t].concat((accepts||[]).map(a=>norm(fill(a)))).filter(Boolean);
+
+  for(const raw of heardList){
+    const h = norm(raw);
+    if(!h) continue;
+    for(const p of pool){
+      if(h === p) return true;
+      if(p.length>2 && h.includes(p)) return true;
+      if(h.length>2 && p.includes(h) && h.length >= p.length*0.6) return true;
+      if(sim(h,p) >= L) return true;
+    }
+    // word-by-word for sentences: enough of the words landed
+    const hw = h.split(" ");
+    let hit=0;
+    for(const w of tw){ if(hw.some(x=>sim(x,w) >= Math.max(0.62, L-0.05))) hit++; }
+    const need = tw.length>=4 ? 0.55 : (tw.length>=2 ? 0.6 : 1);
+    if(hit/tw.length >= need) return true;
+  }
+  return false;
+}
+
+/* ---------- listening ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec=null, listening=false, micStream=null, analyser=null, rafId=0;
+
+function secureOrigin(){
+  return window.isSecureContext === true || location.protocol === "https:" ||
+         location.hostname === "localhost" || location.hostname === "127.0.0.1";
+}
+function micSupported(){
+  return !!SR && secureOrigin() && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+}
+
+async function startMeter(){
+  try{
+    if(!micStream) micStream = await navigator.mediaDevices.getUserMedia({audio:true});
+    ac = ac || new (window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==="suspended") await ac.resume();
+    const src = ac.createMediaStreamSource(micStream);
+    analyser = ac.createAnalyser(); analyser.fftSize = 512;
+    src.connect(analyser);
+    const buf = new Uint8Array(analyser.frequencyBinCount);
+    const el = document.getElementById("micBtn");
+    const loop = ()=>{
+      if(!analyser || !el){ return; }
+      analyser.getByteTimeDomainData(buf);
+      let peak=0; for(let i=0;i<buf.length;i++){ const d=Math.abs(buf[i]-128); if(d>peak) peak=d; }
+      const scale = 1 + Math.min(peak/70, 0.32);
+      el.style.transform = `scale(${scale.toFixed(3)})`;
+      rafId = requestAnimationFrame(loop);
+    };
+    loop();
+  }catch(e){ /* meter is a nice-to-have */ }
+}
+function stopMeter(){
+  cancelAnimationFrame(rafId); analyser=null;
+  const el=document.getElementById("micBtn"); if(el) el.style.transform="";
+}
+
+function listen(onResult, onDone){
+  if(!SR){ onDone && onDone("nosupport"); return; }
+  try{ speechSynthesis.cancel(); }catch(e){}
+  try{
+    rec = new SR();
+    rec.lang = S.accent;
+    rec.interimResults = false;
+    rec.maxAlternatives = 5;
+    rec.continuous = false;
+    let got = false;
+    rec.onresult = e=>{
+      got = true;
+      const alts = [];
+      for(let i=0;i<e.results.length;i++){
+        const r = e.results[i];
+        for(let j=0;j<r.length;j++) alts.push(r[j].transcript);
+      }
+      onResult(alts);
+    };
+    rec.onerror = e=> onDone && onDone(e.error);
+    rec.onend = ()=>{ listening=false; stopMeter(); if(!got) onDone && onDone(null); };
+    listening = true;
+    rec.start();
+    startMeter();
+  }catch(e){ listening=false; onDone && onDone("failed"); }
+}
+function stopListening(){
+  try{ if(rec) rec.stop(); }catch(e){}
+  listening=false; stopMeter();
+}
+
+/* ---------- fx ---------- */
+function confetti(){
+  const fx=$("#fx"); const bits=["⭐","🎉","💫","🌈","✨","🎈"];
+  for(let i=0;i<16;i++){
+    const s=document.createElement("span");
+    s.className="bit"; s.textContent=rnd(bits);
+    s.style.left = (Math.random()*94)+"%";
+    s.style.animationDelay = (Math.random()*0.35)+"s";
+    s.style.fontSize = (22+Math.random()*20)+"px";
+    fx.appendChild(s); setTimeout(()=>s.remove(),2000);
+  }
+}
+function starFly(){
+  const s=document.createElement("div");
+  s.className="starfly"; s.textContent="⭐";
+  s.style.left="calc(50% - 22px)"; s.style.top="52%";
+  document.body.appendChild(s); setTimeout(()=>s.remove(),1000);
+}
+function award(n){
+  S.stars += n; saveState(); starFly();
+  const p=document.getElementById("starPill"); if(p) p.textContent = "⭐ " + S.stars;
+}
+
+/* ---------- praise ---------- */
+const PRAISE = ["Yes! Well done","Perfect","Super","Wonderful","Brilliant","That's it","Lovely","Very good"];
+const GENTLE = ["Good try! Say it with me","Almost! Listen once more","Nice try! Let's say it together"];
+function praise(){ const n=S.name?", "+S.name:""; return rnd(PRAISE)+n; }
+
+/* ---------- screens ---------- */
+function header(back){
+  return `<div class="bar">
+    ${back?`<button class="icon-btn" id="backBtn" aria-label="Back to menu">🏠</button>`:""}
+    <span class="pill" id="starPill">⭐ ${S.stars}</span>
+    <span class="spacer"></span>
+    <button class="icon-btn" id="gearBtn" aria-label="Grown-up settings">⚙️</button>
+  </div>`;
+}
+function wire(back){
+  const b=document.getElementById("backBtn"); if(b) b.onclick=()=>{ stopListening(); home(); };
+  document.getElementById("gearBtn").onclick=openSheet;
+}
+
+function home(){
+  stopListening();
+  const unlocked = Math.floor(S.stars/10);
+  const stick = STICKERS.map((s,i)=>`<span class="sticker ${i<unlocked?"":"locked"}">${s}</span>`).join("");
+  const who = S.name ? esc(S.name) : "little one";
+  app.innerHTML = header(false) + `
+    <h1>Talk Time</h1>
+    <p class="sub">Hi ${who} — pick a game and let's talk!</p>
+    <div class="modes">
+      <button class="mode m1" data-go="words"><span class="em">🖼️</span><span><span class="t">Say the Word</span><span class="d">Look at the picture and say it</span></span></button>
+      <button class="mode m2" data-go="say"><span class="em">🗣️</span><span><span class="t">Copy Me</span><span class="d">Repeat the little sentence</span></span></button>
+      <button class="mode m3" data-go="ask"><span class="em">❓</span><span><span class="t">Question Time</span><span class="d">Answer out loud</span></span></button>
+      <button class="mode m4" data-go="tell"><span class="em">💬</span><span><span class="t">Tell Me!</span><span class="d">Talk freely — no wrong answers</span></span></button>
+    </div>
+    <div class="stickers">
+      <h2>Sticker book — ${unlocked}/${STICKERS.length} <span style="font-weight:600;opacity:.6">(10 stars each)</span></h2>
+      <div class="sticker-row">${stick}</div>
+    </div>`;
+  if(!secureOrigin()){
+    const w=document.createElement("div");
+    w.className="warn"; w.style.marginTop="16px";
+    w.innerHTML = "Opened from a file, so the mic is switched off. Put this page on an <b>https://</b> link to let it listen.";
+    app.appendChild(w);
+  }
+  wire(false);
+  app.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{
+    tone([660,880],0.09);
+    const g=b.dataset.go;
+    if(g==="words") pickCategory(); else start(g);
+  });
+}
+
+function pickCategory(){
+  const cats = Object.keys(WORDS);
+  const emo = {Animals:"🐵",Food:"🍎",Colours:"🎨",Body:"👃",Home:"🏠",Family:"👨‍👩‍👧",Actions:"🏃",Feelings:"😀"};
+  const cls = ["m1","m2","m3","m4"];
+  app.innerHTML = header(true) + `
+    <h1>Say the Word</h1><p class="sub">Which pictures today?</p>
+    <div class="modes">
+      ${cats.map((c,i)=>`<button class="mode ${cls[i%4]}" data-cat="${c}"><span class="em">${emo[c]}</span><span class="t">${c}</span></button>`).join("")}
+    </div>`;
+  wire(true);
+  app.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{ tone([660,880],0.09); start("words", b.dataset.cat); });
+}
+
+/* ---------- the play loop ---------- */
+let Q = [], qi = 0, mode="words", tries=0, cur=null, busy=false;
+
+function start(m, cat){
+  mode = m; qi = 0; tries = 0;
+  if(m==="words") Q = shuffled(WORDS[cat]).map(([w,e])=>({say:w, em:e, show:w}));
+  if(m==="say")   Q = shuffled(SENTENCES).map(([t,e])=>({say:t, em:e, show:t}));
+  if(m==="ask")   Q = shuffled(QUESTIONS).map(q=>({q:q.q, em:q.em, say:q.a, ok:q.ok, show:q.a}));
+  if(m==="tell")  Q = shuffled(TELLME).map(([t,e])=>({q:t, em:e}));
+  step();
+}
+
+function step(){
+  tries = 0;
+  if(qi >= Q.length){ qi = 0; Q = shuffled(Q); }
+  cur = Q[qi];
+  render("");
+  // read the prompt aloud automatically
+  setTimeout(()=>{
+    if(mode==="ask" || mode==="tell") say(fill(cur.q));
+    else say(fill(cur.say));
+  }, 320);
+}
+
+function render(state, heard){
+  const isTell = mode==="tell";
+  const isAsk  = mode==="ask";
+  const title = isAsk||isTell ? `<div class="prompt">${esc(fill(cur.q))}</div>` : "";
+  const showWord = mode==="words" ? `<div class="word">${esc(cur.show)}</div>`
+                 : mode==="say"  ? `<div class="prompt">${esc(fill(cur.show))}</div>` : "";
+  const hint = {
+    "": isTell ? "Tap the mic and tell me!" : "Tap the mic and say it",
+    "listening":"I'm listening…",
+    "thinking":"Let me hear…",
+    "good": praise()+" 🎉",
+    "again": GENTLE[Math.min(tries-1,GENTLE.length-1)] || GENTLE[0]
+  }[state] || "";
+  const cls = state==="listening" ? "listening" : (state==="good" ? "good" : "");
+
+  app.innerHTML = header(true) + `
+    <div class="stage">
+      <div class="card">
+        ${title}
+        <div class="big-em">${cur.em}</div>
+        ${showWord}
+        <div class="hint">${esc(hint)}</div>
+        ${heard?`<div class="heard">I heard: “${esc(heard)}”</div>`:""}
+      </div>
+      <div class="mic-wrap ${cls}">
+        <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+        <button class="mic" id="micBtn" aria-label="Tap to talk">${state==="listening"?"👂":(state==="good"?"⭐":"🎤")}</button>
+      </div>
+      <div class="row">
+        <button class="btn hear" id="hearBtn">🔊 Hear it</button>
+        <button class="btn yes" id="nextBtn">Next ➜</button>
+      </div>
+      ${S.mic!=1||!micSupported() ? `<div class="row"><button class="btn" id="didBtn">👍 I said it!</button></div>`:""}
+    </div>`;
+  wire(true);
+  document.getElementById("micBtn").onclick = onMic;
+  document.getElementById("hearBtn").onclick = ()=> say(fill(isAsk||isTell ? cur.q : cur.say));
+  document.getElementById("nextBtn").onclick = ()=>{ stopListening(); qi++; step(); };
+  const d=document.getElementById("didBtn");
+  if(d) d.onclick = ()=> succeed(null, 1);
+}
+
+function onMic(){
+  if(busy) return;
+  if(listening){ stopListening(); render(""); return; }
+
+  // no mic mode: mic button just replays and lets them practise
+  if(S.mic!=1 || !micSupported()){
+    say(fill(mode==="ask"||mode==="tell" ? cur.q : cur.say));
+    return;
+  }
+  busy = true;
+  render("listening");
+  listen(alts=>{
+    stopListening(); busy=false;
+    const heard = alts[0] || "";
+    if(mode==="tell"){
+      // free talk: any speech is a win, longer answers get more stars
+      const words = norm(heard).split(" ").filter(Boolean).length;
+      succeed(heard, words>=4?3:(words>=2?2:1), true);
+      return;
+    }
+    if(matches(alts, cur.say, cur.ok)) succeed(heard, tries===0?2:1);
+    else fail(heard);
+  }, err=>{
+    busy=false;
+    if(err==="not-allowed" || err==="service-not-allowed"){
+      S.mic = 0; saveState();
+      render("");
+      const h = document.querySelector(".hint");
+      if(h) h.textContent = secureOrigin()
+        ? "Mic is off — tap ⚙️ to turn it back on"
+        : "Mic needs an https link — see ⚙️";
+      return;
+    }
+    if(err) { render("again"); }
+    else { tries++; render(tries>0?"again":""); }
+  });
+}
+
+function succeed(heard, stars, freeTalk){
+  chimeWin(); confetti(); award(stars);
+  render("good", heard);
+  const line = freeTalk ? rnd(["Wow! Tell me more next time","I love that","Great talking","Super story"])
+                        : praise();
+  say(line, ()=> setTimeout(()=>{ qi++; step(); }, 500));
+}
+
+function fail(heard){
+  tries++;
+  chimeTry();
+  render("again", heard);
+  if(tries >= 2){
+    // never leave a child stuck: say it together, give the star, move on
+    say("Let's say it together. " + fill(cur.say), ()=>{
+      setTimeout(()=>{ chimeWin(); award(1); confetti(); render("good", heard);
+        say(praise(), ()=> setTimeout(()=>{ qi++; step(); }, 500));
+      }, 250);
+    });
+  } else {
+    say("Listen. " + fill(cur.say));
+  }
+}
+
+/* ---------- settings sheet ---------- */
+function seg(id, val){
+  document.querySelectorAll("#"+id+" button").forEach(b=>{
+    b.setAttribute("aria-pressed", String(b.dataset.v == val));
+  });
+}
+function openSheet(){
+  stopListening();
+  $("#kidName").value = S.name;
+  $("#kidAge").value = S.age;
+  seg("segAccent", S.accent); seg("segRate", S.rate); seg("segLen", S.len); seg("segMic", S.mic);
+  $("#micWarn").innerHTML = micSupported() ? ""
+    : !secureOrigin()
+      ? `<div class="warn">The mic can't work from an opened file. Browsers only allow it on an <b>https://</b> link. Upload this file to your web space and open it there — the mic will then ask permission and work. Until then the child speaks and taps “I said it!”.</div>`
+      : `<div class="warn">This browser can't listen to speech. Chrome on Android or a computer works best. Everything else still runs — the child speaks, then taps “I said it!”.</div>`;
+  $("#sheet").classList.add("on");
+}
+function closeSheet(){
+  S.name = $("#kidName").value.trim().slice(0,16);
+  S.age  = Math.max(2, Math.min(9, parseInt($("#kidAge").value,10) || 4));
+  saveState(); $("#sheet").classList.remove("on");
+  pickVoice();
+  home();
+}
+$("#closeSheet").onclick = closeSheet;
+$("#sheet").addEventListener("click", e=>{ if(e.target.id==="sheet") closeSheet(); });
+$("#resetBtn").onclick = ()=>{
+  if(confirm("Reset stars and stickers back to zero?")){ S.stars=0; saveState(); }
+};
+[["segAccent","accent",v=>v],["segRate","rate",parseFloat],["segLen","len",parseFloat],["segMic","mic",v=>parseInt(v,10)]]
+.forEach(([id,key,conv])=>{
+  document.querySelectorAll("#"+id+" button").forEach(b=>{
+    b.onclick = ()=>{ S[key] = conv(b.dataset.v); seg(id, b.dataset.v); saveState(); if(key==="accent") pickVoice(); };
+  });
+});
+
+/* ---------- boot ---------- */
+document.addEventListener("visibilitychange", ()=>{ if(document.hidden){ stopListening(); try{speechSynthesis.cancel();}catch(e){} } });
+window.addEventListener("pagehide", stopListening);
+
+(async ()=>{ await loadState(); home(); })();
+</script>
+</body>
+</html>
