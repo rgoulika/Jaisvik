@@ -278,6 +278,7 @@ function say(text){
 }
 function addStar(n){
   stars += n;
+  if(window.PlayKit) PlayKit.win(n);
   $("stars").textContent = "⭐ " + stars;
 }
 function burst(){
@@ -543,5 +544,7 @@ $("sound").onclick = () => {
 };
 home();
 </script>
+
+<script src="playkit.js"></script>
 </body>
 </html>

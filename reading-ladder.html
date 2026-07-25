@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
+<meta name="theme-color" content="#EFEAFF"/>
+<title>Reading Ladder — letter sounds to sentences</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%232EC4B6'/%3E%3Ctext x='50' y='73' font-size='58' text-anchor='middle'%3E%F0%9F%AA%9C%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#2B2140; --paper:#EFEAFF; --card:#fff;
+  --mango:#FF9F1C; --berry:#FF5D8F; --leaf:#2EC4B6; --sky:#4CC9F0; --grape:#7C4DFF; --lime:#B8E635;
+  --display:'Fredoka', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
+  --body:'Nunito', ui-rounded, system-ui, sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-weight:800;
+  -webkit-user-select:none;user-select:none;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+#app{max-width:520px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;padding:14px 16px 96px}
+button{font:inherit;color:inherit}
+
+.bar{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.pill{display:inline-flex;align-items:center;gap:7px;background:var(--card);border:4px solid var(--ink);
+  border-radius:999px;padding:7px 15px;font-family:var(--display);font-weight:700;font-size:18px;box-shadow:4px 4px 0 var(--ink)}
+.ico{width:52px;height:52px;flex:0 0 52px;border-radius:50%;background:var(--card);border:4px solid var(--ink);
+  box-shadow:4px 4px 0 var(--ink);font-size:23px;display:grid;place-items:center;cursor:pointer}
+.ico:active,.pill:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.sp{flex:1}
+h1{font-family:var(--display);font-weight:700;font-size:34px;line-height:1.04;margin:0 0 4px}
+.sub{font-size:14px;opacity:.6;margin:0 0 20px}
+
+/* ladder */
+.rungs{display:grid;gap:13px}
+.rung{display:flex;align-items:center;gap:15px;text-align:left;border:4px solid var(--ink);border-radius:24px;
+  box-shadow:6px 6px 0 var(--ink);padding:16px 17px;cursor:pointer;font-family:var(--display);font-weight:700}
+.rung:active{transform:translate(4px,4px);box-shadow:2px 2px 0 var(--ink)}
+.rung .em{font-size:38px;line-height:1}
+.rung .t{font-size:22px;line-height:1.1;display:block}
+.rung .d{font-family:var(--body);font-weight:800;font-size:12.5px;opacity:.72;margin-top:3px;display:block}
+.rung .age{font-family:var(--body);font-size:11px;font-weight:800;opacity:.62;letter-spacing:.06em;display:block;margin-top:5px}
+.rung.lock{background:#DED8F0!important;box-shadow:4px 4px 0 #9A90B8;border-color:#9A90B8;color:#6C6288;cursor:default}
+.rung.lock:active{transform:none;box-shadow:4px 4px 0 #9A90B8}
+.r1{background:var(--mango)}.r2{background:var(--sky)}.r3{background:var(--berry)}
+.r4{background:var(--lime)}.r5{background:var(--leaf)}
+.prog{height:9px;border:3px solid var(--ink);border-radius:8px;background:#fff;overflow:hidden;margin-top:7px;max-width:150px}
+.prog i{display:block;height:100%;background:var(--ink);width:0}
+
+/* play */
+.stage{flex:1;display:flex;flex-direction:column;justify-content:center;gap:15px}
+.card{background:var(--card);border:4px solid var(--ink);border-radius:32px;box-shadow:6px 6px 0 var(--ink);
+  padding:24px 18px;text-align:center;animation:pop .3s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{from{transform:scale(.92) translateY(8px);opacity:0}to{transform:none;opacity:1}}
+.ask{font-family:var(--display);font-weight:600;font-size:20px;opacity:.75;margin-bottom:10px}
+.hero{font-size:clamp(66px,22vw,104px);line-height:1;margin:4px 0 8px}
+.word{font-family:var(--display);font-weight:700;font-size:clamp(40px,13vw,64px);letter-spacing:2px}
+.sentence{font-family:var(--display);font-weight:600;font-size:clamp(26px,7.6vw,36px);line-height:1.3}
+.hint{font-size:13.5px;opacity:.58;margin-top:9px;min-height:19px}
+
+/* letter tiles for blending */
+.blend{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:6px 0 4px}
+.tile{width:74px;height:82px;border:4px solid var(--ink);border-radius:18px;background:var(--mango);
+  font-family:var(--display);font-weight:700;font-size:44px;display:grid;place-items:center;
+  box-shadow:4px 4px 0 var(--ink);cursor:pointer}
+.tile:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.tile.said{background:var(--lime)}
+
+/* answer grid */
+.opts{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.opt{border:4px solid var(--ink);border-radius:22px;background:var(--card);box-shadow:5px 5px 0 var(--ink);
+  padding:20px 8px;font-family:var(--display);font-weight:700;font-size:34px;cursor:pointer}
+.opt.pic{font-size:50px;padding:14px 8px}
+.opt:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--ink)}
+.opt.yes{background:var(--leaf)}
+.opt.no{background:#F3C9D6;opacity:.75}
+
+.row{display:flex;gap:11px}
+.btn{flex:1;border:4px solid var(--ink);border-radius:20px;background:var(--card);box-shadow:4px 4px 0 var(--ink);
+  padding:14px 8px;font-family:var(--display);font-weight:700;font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:7px}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn.hear{background:var(--mango)} .btn.go{background:var(--leaf)}
+
+/* mic */
+.micwrap{position:relative;display:grid;place-items:center;height:150px}
+.ring{position:absolute;width:112px;height:112px;border-radius:50%;border:4px solid var(--grape);opacity:0}
+.listening .ring{animation:rip 1.7s ease-out infinite}
+.listening .ring:nth-child(2){animation-delay:.6s}
+@keyframes rip{0%{transform:scale(1);opacity:.7}100%{transform:scale(2);opacity:0}}
+.mic{width:112px;height:112px;border-radius:50%;background:var(--grape);color:#fff;border:4px solid var(--ink);
+  box-shadow:7px 7px 0 var(--ink);font-size:46px;display:grid;place-items:center;cursor:pointer}
+.mic:active{transform:translate(4px,4px);box-shadow:3px 3px 0 var(--ink)}
+.listening .mic{background:var(--berry)}
+.heard{margin-top:9px;font-size:14px;background:var(--paper);border-radius:13px;padding:7px 11px;display:inline-block}
+
+.warn{background:#FFE7A8;border:3px solid var(--ink);border-radius:16px;padding:11px 13px;font-size:13px;line-height:1.45;margin-top:16px}
+#fx{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:60}
+.bit{position:absolute;font-size:28px;animation:fall 1.5s ease-in forwards}
+@keyframes fall{to{transform:translateY(106vh) rotate(400deg);opacity:0}}
+:focus-visible{outline:4px solid var(--grape);outline-offset:3px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div><div id="fx"></div>
+
+<script>
+"use strict";
+
+/* ============ content ============ */
+// how to make the speech engine say a SOUND, not a letter name
+var SOUND = {a:"ah",b:"buh",c:"kuh",d:"duh",e:"eh",f:"fff",g:"guh",h:"huh",i:"ih",j:"juh",
+  k:"kuh",l:"lll",m:"mmm",n:"nnn",o:"o",p:"puh",q:"kwuh",r:"rrr",s:"sss",t:"tuh",
+  u:"uh",v:"vvv",w:"wuh",x:"kss",y:"yuh",z:"zzz"};
+
+var PICS = {
+  a:["🍎","apple"], b:["🎈","balloon"], c:["🐱","cat"], d:["🐶","dog"], e:["🥚","egg"],
+  f:["🐟","fish"], g:["🐐","goat"], h:["🎩","hat"], i:["🍦","ice cream"], j:["🫙","jar"],
+  k:["🔑","key"], l:["🦁","lion"], m:["🌙","moon"], n:["👃","nose"], o:["🐙","octopus"],
+  p:["🖊️","pen"], q:["👑","queen"], r:["🌈","rainbow"], s:["☀️","sun"], t:["🌳","tree"],
+  u:["☂️","umbrella"], v:["🎻","violin"], w:["⌚","watch"], x:["📦","box"], y:["🪀","yoyo"], z:["🦓","zebra"]
+};
+
+var CVC = [
+  ["cat","🐱"],["dog","🐶"],["sun","☀️"],["hat","🎩"],["bed","🛏️"],["pig","🐷"],
+  ["cup","☕"],["bus","🚌"],["net","🥅"],["top","🔝"],["man","👨"],["fan","🪭"],
+  ["pen","🖊️"],["bag","🎒"],["six","6️⃣"],["hen","🐔"],["log","🪵"],["jam","🍓"],
+  ["box","📦"],["fox","🦊"],["bat","🦇"],["rug","🧶"],["cow","🐄"],["leg","🦵"]
+];
+
+// Dolch pre-primer and primer words — the ones that don't sound out
+var SIGHT = ["the","and","is","you","said","are","was","they","have","come","look","see",
+  "go","my","we","like","he","she","it","can","play","run","big","little","one","two",
+  "for","help","here","jump","not","out","away","funny","make","yellow","who","this"];
+
+var SENTENCES = [
+  ["The cat is big.","🐱"], ["I can see a dog.","🐶"], ["We like to play.","🧸"],
+  ["The sun is hot.","☀️"], ["He has a red hat.","🎩"], ["My mum is here.","👩"],
+  ["I can run fast.","🏃"], ["The bus is yellow.","🚌"], ["She has a pen.","🖊️"],
+  ["Look at the moon.","🌙"], ["We go to school.","🎒"], ["The fish can swim.","🐟"],
+  ["I like my new bag.","🎒"], ["The pig is in the mud.","🐷"], ["Come and play with me.","🤝"]
+];
+
+var RUNGS = [
+  {id:0, em:"🔊", t:"Letter Sounds",  d:"Hear a sound, find the letter",       age:"AGE 4",     need:0,  goal:20, cls:"r1"},
+  {id:1, em:"🖼️", t:"First Sound",    d:"What does this picture start with?",  age:"AGE 4–5",   need:20, goal:20, cls:"r2"},
+  {id:2, em:"🧩", t:"Blend It",       d:"c–a–t … cat! Sound out the word",     age:"AGE 5",     need:40, goal:24, cls:"r3"},
+  {id:3, em:"⚡", t:"Sight Words",    d:"Words to know on sight",              age:"AGE 5–6",   need:64, goal:30, cls:"r4"},
+  {id:4, em:"📖", t:"Read a Sentence",d:"Read it out loud to me",              age:"AGE 6",     need:94, goal:20, cls:"r5"}
+];
+
+/* ============ save ============ */
+var KEY="jaisvik.ladder.v1", mem=null;
+var P = {done:[0,0,0,0,0], total:0};
+try{ var r=localStorage.getItem(KEY); if(r) P=Object.assign(P,JSON.parse(r)); }catch(e){}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(P)); }catch(e){ mem=P; } }
+
+/* ============ helpers ============ */
+var $=function(s){return document.querySelector(s);}, app=$("#app");
+function rnd(a){return a[Math.floor(Math.random()*a.length)];}
+function shuf(a){var c=a.slice();for(var i=c.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=c[i];c[i]=c[j];c[j]=t;}return c;}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];});}
+
+/* ============ speech ============ */
+var voice=null;
+function pickVoice(){
+  var vs = speechSynthesis.getVoices ? speechSynthesis.getVoices() : [];
+  if(!vs.length) return;
+  var L=function(v){return (v.lang||"").replace("_","-");};
+  voice = vs.filter(function(v){return L(v)==="en-IN";})[0]
+       || vs.filter(function(v){return L(v)==="en-GB";})[0]
+       || vs.filter(function(v){return L(v).indexOf("en")===0;})[0] || null;
+}
+if(window.speechSynthesis){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
+function say(t, rate, done){
+  try{
+    speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(t);
+    if(voice) u.voice=voice;
+    u.lang="en-IN"; u.rate=rate||0.85; u.pitch=1.12;
+    if(done) u.onend=done;
+    speechSynthesis.speak(u);
+  }catch(e){ if(done) done(); }
+}
+var ac=null;
+function beep(f,step,type){
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==="suspended") ac.resume();
+    f.forEach(function(hz,i){
+      var o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime+i*(step||0.1);
+      o.type=type||"sine"; o.frequency.value=hz;
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(.2,t+.02);
+      g.gain.exponentialRampToValueAtTime(.0001,t+(step||0.1));
+      o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+(step||0.1)+.03);
+    });
+  }catch(e){}
+}
+var win=function(){beep([523,659,784,1047],.12);}, nope=function(){beep([392,340],.16,"triangle");};
+
+function confetti(){
+  var b=["⭐","🎉","✨","🌈","💫"];
+  for(var i=0;i<14;i++){(function(){
+    var s=document.createElement("span"); s.className="bit"; s.textContent=rnd(b);
+    s.style.left=(Math.random()*93)+"%"; s.style.animationDelay=(Math.random()*.3)+"s";
+    s.style.fontSize=(20+Math.random()*18)+"px";
+    $("#fx").appendChild(s); setTimeout(function(){s.remove();},1900);
+  })();}
+}
+
+/* ============ listening (rungs 2,3,4) ============ */
+var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+function secure(){ return window.isSecureContext===true || location.protocol==="https:" ||
+  location.hostname==="localhost" || location.hostname==="127.0.0.1"; }
+function micOK(){ return !!SR && secure(); }
+var rec=null, hearing=false;
+function listen(ok, fail){
+  if(!SR){ fail("nosupport"); return; }
+  try{ speechSynthesis.cancel(); }catch(e){}
+  try{
+    rec=new SR(); rec.lang="en-IN"; rec.interimResults=false; rec.maxAlternatives=5; rec.continuous=false;
+    var got=false;
+    rec.onresult=function(e){ got=true; var a=[]; for(var i=0;i<e.results.length;i++){var R=e.results[i];
+      for(var j=0;j<R.length;j++) a.push(R[j].transcript);} ok(a); };
+    rec.onerror=function(e){ fail(e.error); };
+    rec.onend=function(){ hearing=false; if(!got) fail(null); };
+    hearing=true; rec.start();
+  }catch(e){ hearing=false; fail("failed"); }
+}
+function stopListen(){ try{ if(rec) rec.stop(); }catch(e){} hearing=false; }
+
+function norm(s){ return (s||"").toLowerCase().replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim(); }
+function lev(a,b){
+  var m=a.length,n=b.length; if(!m)return n; if(!n)return m;
+  var prev=[],cur=[],i,j; for(j=0;j<=n;j++) prev[j]=j;
+  for(i=1;i<=m;i++){ cur[0]=i;
+    for(j=1;j<=n;j++) cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    var t=prev; prev=cur; cur=t; }
+  return prev[n];
+}
+function sim(a,b){ var m=Math.max(a.length,b.length); return m? 1-lev(a,b)/m : 1; }
+function heardIt(list, target){
+  var t=norm(target); if(!t) return false;
+  var tw=t.split(" ");
+  for(var i=0;i<list.length;i++){
+    var h=norm(list[i]); if(!h) continue;
+    if(h===t) return true;
+    if(t.length>2 && h.indexOf(t)>=0) return true;
+    if(sim(h,t)>=0.62) return true;
+    var hw=h.split(" "), hit=0;
+    for(var k=0;k<tw.length;k++){
+      for(var m2=0;m2<hw.length;m2++){ if(sim(hw[m2],tw[k])>=0.66){ hit++; break; } }
+    }
+    if(hit/tw.length >= (tw.length>=4?0.55:0.62)) return true;
+  }
+  return false;
+}
+
+/* ============ progress ============ */
+function credit(rung){
+  P.done[rung]=(P.done[rung]||0)+1; P.total++;
+  if(window.PlayKit) PlayKit.win(1);
+  save();
+}
+function unlocked(i){ return P.total >= RUNGS[i].need; }
+
+/* ============ screens ============ */
+function head(back){
+  return '<div class="bar">'+
+    (back?'<button class="ico" id="bk" aria-label="Back">🏠</button>':'')+
+    '<span class="pill">🪜 '+P.total+'</span><span class="sp"></span>'+
+    '<button class="ico" id="ear" aria-label="Say it again">🔊</button></div>';
+}
+
+function home(){
+  stopListen();
+  var rows = RUNGS.map(function(R,i){
+    var open=unlocked(i), pct=Math.min(100, (P.done[i]/R.goal)*100);
+    return '<button class="rung '+(open?R.cls:"lock")+'" data-r="'+i+'">'+
+      '<span class="em">'+(open?R.em:"🔒")+'</span>'+
+      '<span><span class="t">'+R.t+'</span><span class="d">'+
+        (open ? R.d : (R.need - P.total)+" more to unlock")+'</span>'+
+      '<span class="age">'+R.age+'</span>'+
+      (open?'<span class="prog"><i style="width:'+pct+'%"></i></span>':'')+
+      '</span></button>';
+  }).join("");
+  app.innerHTML = head(false)+
+    '<h1>Reading Ladder</h1><p class="sub">One rung at a time, from sounds to sentences</p>'+
+    '<div class="rungs">'+rows+'</div>'+
+    (micOK()?'':'<div class="warn">The top three rungs listen to reading out loud. That needs an <b>https://</b> link — on a plain file the app shows a tap button instead.</div>');
+  $("#bk")&&($("#bk").onclick=home);
+  $("#ear").onclick=function(){ say("Pick a rung to climb."); };
+  Array.prototype.forEach.call(app.querySelectorAll("[data-r]"), function(b){
+    b.onclick=function(){
+      var i=+b.dataset.r;
+      if(!unlocked(i)){ nope(); say("Keep going on the rungs below first."); return; }
+      beep([660,880],.09); start(i);
+    };
+  });
+}
+
+/* ============ play ============ */
+var R=0, Q=null, tries=0, busy=false;
+
+function start(i){ R=i; tries=0; next(); }
+
+function next(){
+  tries=0;
+  if(R===0) Q=qSound();
+  if(R===1) Q=qFirst();
+  if(R===2) Q=qBlend();
+  if(R===3) Q=qSight();
+  if(R===4) Q=qSentence();
+  draw();
+  setTimeout(function(){ Q.speak(); }, 300);
+}
+
+function shell(inner, controls){
+  app.innerHTML = head(true)+'<div class="stage">'+inner+(controls||"")+'</div>';
+  $("#bk").onclick=function(){ stopListen(); home(); };
+  $("#ear").onclick=function(){ Q.speak(); };
+}
+
+/* -- rung 1: hear a sound, tap the letter -- */
+function qSound(){
+  var letters="abcdefghijklmnopqrstuvwxyz".split("");
+  var target=rnd(letters);
+  var opts=shuf([target].concat(shuf(letters.filter(function(l){return l!==target;})).slice(0,3)));
+  return {
+    speak:function(){ say(SOUND[target], .75); },
+    draw:function(){
+      return '<div class="card"><div class="ask">Which letter says this sound?</div>'+
+        '<div class="hero">🔊</div>'+
+        '<div class="hint">Tap 🔊 above to hear it again</div></div>'+
+        '<div class="opts">'+opts.map(function(l){
+          return '<button class="opt" data-a="'+l+'">'+l+'</button>';}).join("")+'</div>';
+    },
+    check:function(v){ return v===target; },
+    answer:target,
+    tell:function(){ return "This one says "+SOUND[target]+". It is "+target+"."; }
+  };
+}
+
+/* -- rung 2: picture, which letter does it start with -- */
+function qFirst(){
+  var letters=Object.keys(PICS);
+  var target=rnd(letters), pic=PICS[target];
+  var opts=shuf([target].concat(shuf(letters.filter(function(l){return l!==target;})).slice(0,3)));
+  return {
+    speak:function(){ say(pic[1]+". What sound does it start with?"); },
+    draw:function(){
+      return '<div class="card"><div class="ask">What does it start with?</div>'+
+        '<div class="hero">'+pic[0]+'</div><div class="word">'+pic[1]+'</div></div>'+
+        '<div class="opts">'+opts.map(function(l){
+          return '<button class="opt" data-a="'+l+'">'+l+'</button>';}).join("")+'</div>';
+    },
+    check:function(v){ return v===target; },
+    answer:target,
+    tell:function(){ return pic[1]+" starts with "+SOUND[target]+". "+target+"."; }
+  };
+}
+
+/* -- rung 3: blend the letters, then say the word -- */
+function qBlend(){
+  var w=rnd(CVC), word=w[0], em=w[1];
+  var picks=shuf([w].concat(shuf(CVC.filter(function(x){return x[0]!==word;})).slice(0,3)));
+  return {
+    word:word,
+    speak:function(){ sound(); },
+    draw:function(){
+      return '<div class="card"><div class="ask">Tap each letter, then say the word</div>'+
+        '<div class="blend">'+word.split("").map(function(c,i){
+          return '<button class="tile" data-l="'+c+'" data-i="'+i+'">'+c+'</button>';}).join("")+'</div>'+
+        '<div class="hint" id="hint">Sound it out slowly</div></div>'+
+        (micOK()
+          ? '<div class="micwrap" id="mw"><div class="ring"></div><div class="ring"></div>'+
+            '<button class="mic" id="mic">🎤</button></div>'
+          : '<div class="opts">'+picks.map(function(p){
+              return '<button class="opt pic" data-a="'+p[0]+'">'+p[1]+'</button>';}).join("")+'</div>');
+    },
+    check:function(v){ return v===word; },
+    answer:word,
+    tell:function(){ return "That word is "+word+"."; },
+    emoji:em
+  };
+  function sound(){
+    var parts=word.split(""), i=0;
+    (function nextPart(){
+      if(i>=parts.length){ setTimeout(function(){ say(word, .8); },260); return; }
+      var t=document.querySelector('.tile[data-i="'+i+'"]');
+      if(t) t.classList.add("said");
+      say(SOUND[parts[i]], .72, function(){ i++; setTimeout(nextPart, 130); });
+    })();
+  }
+}
+
+/* -- rung 4: sight words, read aloud -- */
+function qSight(){
+  var word=rnd(SIGHT);
+  var opts=shuf([word].concat(shuf(SIGHT.filter(function(x){return x!==word;})).slice(0,3)));
+  return {
+    speak:function(){ say(word, .8); },
+    draw:function(){
+      return '<div class="card"><div class="ask">Read this word out loud</div>'+
+        '<div class="word" style="font-size:clamp(48px,15vw,74px)">'+word+'</div>'+
+        '<div class="hint">Not sure? Tap 🔊 to hear it</div></div>'+
+        (micOK()
+          ? '<div class="micwrap" id="mw"><div class="ring"></div><div class="ring"></div>'+
+            '<button class="mic" id="mic">🎤</button></div>'
+          : '<div class="opts">'+opts.map(function(o){
+              return '<button class="opt" style="font-size:26px" data-a="'+o+'">'+o+'</button>';}).join("")+'</div>');
+    },
+    check:function(v){ return v===word; },
+    answer:word,
+    tell:function(){ return "That word is "+word+"."; }
+  };
+}
+
+/* -- rung 5: read a whole sentence -- */
+function qSentence(){
+  var s=rnd(SENTENCES);
+  return {
+    speak:function(){ say(s[0], .8); },
+    draw:function(){
+      return '<div class="card"><div class="ask">Read it out loud</div>'+
+        '<div class="hero" style="font-size:64px">'+s[1]+'</div>'+
+        '<div class="sentence">'+esc(s[0])+'</div>'+
+        '<div class="hint">Take your time</div></div>'+
+        (micOK()
+          ? '<div class="micwrap" id="mw"><div class="ring"></div><div class="ring"></div>'+
+            '<button class="mic" id="mic">🎤</button></div>'
+          : '<div class="row"><button class="btn go" id="did">👍 I read it!</button></div>');
+    },
+    check:function(){ return true; },
+    answer:s[0],
+    tell:function(){ return s[0]; }
+  };
+}
+
+/* ============ draw + wire ============ */
+function draw(heard){
+  shell(Q.draw(),
+    '<div class="row"><button class="btn hear" id="hb">🔊 Hear it</button>'+
+    '<button class="btn go" id="nb">Next ➜</button></div>'+
+    (heard?'<div style="text-align:center"><span class="heard">I heard: “'+esc(heard)+'”</span></div>':''));
+
+  $("#hb").onclick=function(){ Q.speak(); };
+  $("#nb").onclick=function(){ stopListen(); next(); };
+
+  Array.prototype.forEach.call(app.querySelectorAll("[data-a]"), function(b){
+    b.onclick=function(){
+      if(busy) return;
+      if(Q.check(b.dataset.a)){ b.classList.add("yes"); good(); }
+      else{ b.classList.add("no"); bad(); }
+    };
+  });
+  Array.prototype.forEach.call(app.querySelectorAll(".tile"), function(t){
+    t.onclick=function(){ t.classList.add("said"); say(SOUND[t.dataset.l], .72); };
+  });
+  var m=$("#mic"); if(m) m.onclick=onMic;
+  var d=$("#did"); if(d) d.onclick=good;
+}
+
+function onMic(){
+  if(busy) return;
+  if(hearing){ stopListen(); draw(); return; }
+  busy=true;
+  var mw=$("#mw"); if(mw) mw.classList.add("listening");
+  $("#mic").textContent="👂";
+  listen(function(alts){
+    stopListen(); busy=false;
+    if(heardIt(alts, Q.answer)) good(alts[0]);
+    else bad(alts[0]);
+  }, function(err){
+    busy=false;
+    if(err==="not-allowed"||err==="service-not-allowed"){
+      draw(); var h=$("#hint")||document.querySelector(".hint");
+      if(h) h.textContent="Mic is blocked — use the 🔊 button and read along";
+      return;
+    }
+    draw();
+  });
+}
+
+function good(heard){
+  win(); confetti(); credit(R);
+  draw(heard);
+  var h=document.querySelector(".hint"); if(h) h.textContent="Yes! Well done ⭐";
+  say(rnd(["Yes! Well done","Perfect","Super reading","That's it","Brilliant"]), .9,
+    function(){ setTimeout(next, 450); });
+}
+
+function bad(heard){
+  tries++;
+  nope();
+  draw(heard);
+  var h=document.querySelector(".hint");
+  if(tries>=2){
+    if(h) h.textContent="Let's do it together ⭐";
+    say(Q.tell(), .72, function(){
+      setTimeout(function(){ win(); confetti(); credit(R); setTimeout(next, 700); }, 300);
+    });
+  }else{
+    if(h) h.textContent="Good try — listen once more";
+    say("Listen. "+Q.tell(), .72);
+  }
+}
+
+document.addEventListener("visibilitychange", function(){
+  if(document.hidden){ stopListen(); try{speechSynthesis.cancel();}catch(e){} }
+});
+home();
+</script>
+<script src="playkit.js"></script>
+</body>
+</html>

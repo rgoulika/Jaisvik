@@ -697,6 +697,7 @@ function check(){
   if(stars>=2){ S.done[S.mode+":"+currentItem().id]=true; saveDone(); }
 }
 function showStars(n,msg,pct){
+  if(window.PlayKit && n>0) PlayKit.win(n);
   $("starRow").textContent="★".repeat(n)+"☆".repeat(3-n);
   $("starMsg").innerHTML=msg+(pct!=null?`<br><span style="font:600 12px 'Mulish';opacity:.7">${pct}% of the letter covered</span>`:"");
   $("stars").classList.add("show");
@@ -783,5 +784,7 @@ window.addEventListener("resize",()=>{
   if(!screens.trace.classList.contains("hidden")){ sizeCanvases(); drawGuide(); }
 })();
 </script>
+
+<script src="playkit.js"></script>
 </body>
 </html>

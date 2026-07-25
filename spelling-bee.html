@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Pronouncer — Spelling Bee Practice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,700;1,6..96,400&family=Karla:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --curtain:#1D1420;
+  --curtain-2:#2B1D30;
+  --panel:#241829;
+  --brass:#E3A93C;
+  --brass-dim:#8B6526;
+  --chalk:#F3EBE1;
+  --muted:#A08FA0;
+  --mint:#6FCBA0;
+  --coral:#E4695B;
+  --rule:rgba(227,169,60,.22);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--curtain);
+  color:var(--chalk);
+  font-family:"Karla",system-ui,sans-serif;
+  font-size:16px;
+  line-height:1.55;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+/* stage light */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(120% 70% at 50% -10%, rgba(227,169,60,.16), transparent 62%),
+    radial-gradient(90% 60% at 50% 110%, rgba(110,60,120,.28), transparent 70%);
+}
+.wrap{position:relative;z-index:1;max-width:660px;margin:0 auto;padding:28px 20px 64px}
+
+/* ---------- masthead ---------- */
+.masthead{text-align:center;margin-bottom:26px}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.28em;
+  text-transform:uppercase;color:var(--brass);margin:0 0 6px
+}
+.masthead h1{
+  font-family:"Bodoni Moda",serif;font-weight:700;font-size:clamp(38px,9vw,60px);
+  line-height:.92;margin:0;letter-spacing:-.01em
+}
+.masthead h1 em{font-style:italic;font-weight:400;display:block;font-size:.52em;color:var(--brass);letter-spacing:.02em;margin-top:8px}
+.rule{height:1px;background:linear-gradient(90deg,transparent,var(--rule) 20%,var(--rule) 80%,transparent);margin:22px 0}
+
+/* ---------- shared bits ---------- */
+.card{
+  background:linear-gradient(180deg,var(--panel),#1F1424);
+  border:1px solid var(--rule);border-radius:14px;padding:20px;
+}
+button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:none}
+button:focus-visible,input:focus-visible,.level:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+.hidden{display:none !important}
+.label{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+
+/* ---------- setup ---------- */
+.lede{text-align:center;color:var(--muted);max-width:44ch;margin:0 auto 26px}
+.levels{display:grid;gap:12px;margin-bottom:26px}
+.level{
+  display:flex;align-items:baseline;gap:14px;width:100%;text-align:left;
+  background:linear-gradient(180deg,var(--panel),#1F1424);
+  border:1px solid var(--rule);border-radius:12px;padding:15px 17px;
+  transition:border-color .18s,transform .18s,background .18s;
+}
+.level:hover{border-color:var(--brass);transform:translateY(-1px)}
+.level[aria-pressed="true"]{border-color:var(--brass);background:linear-gradient(180deg,#33223A,#261832)}
+.level[aria-pressed="true"] .lv-name{color:var(--brass)}
+.lv-num{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--brass-dim);flex:0 0 auto}
+.lv-name{font-family:"Bodoni Moda",serif;font-size:21px;font-weight:700;line-height:1.1;display:block}
+.lv-desc{color:var(--muted);font-size:13.5px;display:block;margin-top:2px}
+
+.chiprow{display:flex;align-items:center;gap:9px;justify-content:center;flex-wrap:wrap;margin-bottom:26px}
+.chip{
+  border:1px solid var(--rule);border-radius:999px;padding:7px 15px;
+  font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted);
+  transition:all .16s;background:rgba(255,255,255,.02)
+}
+.chip:hover{border-color:var(--brass);color:var(--chalk)}
+.chip[aria-pressed="true"]{background:var(--brass);color:#1D1420;border-color:var(--brass);font-weight:600}
+
+.begin{
+  display:block;width:100%;background:var(--brass);color:#1B1119;
+  font-family:"Bodoni Moda",serif;font-size:20px;font-weight:700;
+  padding:16px;border-radius:12px;transition:filter .16s,transform .16s
+}
+.begin:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.note{font-size:13px;color:var(--muted);text-align:center;margin:16px auto 0;max-width:46ch}
+
+/* ---------- round header ---------- */
+.roundbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+.dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.dot{width:9px;height:9px;border-radius:50%;border:1px solid var(--brass-dim);background:transparent}
+.dot.hit{background:var(--mint);border-color:var(--mint)}
+.dot.miss{background:var(--coral);border-color:var(--coral)}
+.dot.now{background:var(--brass);border-color:var(--brass);box-shadow:0 0 0 3px rgba(227,169,60,.18)}
+
+/* ---------- the orb (signature) ---------- */
+.podium{text-align:center;padding:8px 0 4px}
+.orb{
+  position:relative;width:132px;height:132px;border-radius:50%;margin:0 auto;
+  display:grid;place-items:center;
+  background:radial-gradient(circle at 50% 38%,#3E2A45,#221629 70%);
+  border:1px solid var(--rule);
+  transition:transform .2s;
+}
+.orb:hover{transform:scale(1.03)}
+.orb::after{
+  content:"";position:absolute;inset:-10px;border-radius:50%;
+  border:1px solid rgba(227,169,60,.3);opacity:0;
+}
+.orb.speaking::after{animation:ring 1.5s ease-out infinite}
+@keyframes ring{0%{opacity:.75;transform:scale(.92)}100%{opacity:0;transform:scale(1.28)}}
+.bars{display:flex;align-items:flex-end;gap:5px;height:44px}
+.bars i{display:block;width:5px;height:12px;border-radius:3px;background:var(--brass);opacity:.55}
+.orb.speaking .bars i{animation:bounce .6s ease-in-out infinite}
+.orb.speaking .bars i:nth-child(2){animation-delay:.09s}
+.orb.speaking .bars i:nth-child(3){animation-delay:.18s}
+.orb.speaking .bars i:nth-child(4){animation-delay:.27s}
+.orb.speaking .bars i:nth-child(5){animation-delay:.36s}
+@keyframes bounce{0%,100%{height:12px;opacity:.5}50%{height:40px;opacity:1}}
+.podium p{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin:14px 0 0}
+
+/* ---------- ritual requests ---------- */
+.asks{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:20px 0 6px}
+.ask{
+  border:1px solid var(--rule);border-radius:8px;padding:8px 13px;font-size:13.5px;
+  color:var(--chalk);background:rgba(255,255,255,.025);transition:all .16s
+}
+.ask:hover{border-color:var(--brass);background:rgba(227,169,60,.1)}
+.ask[data-used="1"]{color:var(--muted);border-color:rgba(227,169,60,.12)}
+.slips{margin:14px 0 0;display:grid;gap:9px}
+.slip{
+  border-left:2px solid var(--brass);padding:10px 0 10px 14px;
+  background:linear-gradient(90deg,rgba(227,169,60,.07),transparent 70%);
+  animation:slide .28s ease-out
+}
+@keyframes slide{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+.slip .label{display:block;margin-bottom:3px}
+.slip p{margin:0;font-size:15.5px}
+.slip em{color:var(--chalk);font-style:italic}
+
+/* ---------- answer line ---------- */
+.answer{margin-top:26px}
+#spellInput{
+  width:100%;background:transparent;border:none;border-bottom:2px solid var(--brass-dim);
+  color:var(--chalk);font-family:"IBM Plex Mono",monospace;font-weight:500;
+  font-size:clamp(22px,6.5vw,30px);letter-spacing:.14em;text-align:center;
+  padding:10px 4px 12px;transition:border-color .2s;
+}
+#spellInput:focus{border-bottom-color:var(--brass)}
+#spellInput::placeholder{color:#5C4A5E;letter-spacing:.1em;font-size:15px}
+.actions{display:flex;gap:10px;margin-top:18px}
+.primary{
+  flex:1;background:var(--brass);color:#1B1119;font-weight:700;font-size:16px;
+  padding:14px;border-radius:10px;transition:filter .16s
+}
+.primary:hover{filter:brightness(1.08)}
+.ghost{
+  padding:14px 16px;border:1px solid var(--rule);border-radius:10px;
+  color:var(--muted);font-size:14px;transition:all .16s
+}
+.ghost:hover{color:var(--chalk);border-color:var(--brass)}
+
+/* ---------- verdict ---------- */
+.verdict{margin-top:20px;text-align:center;min-height:24px}
+.verdict .call{font-family:"Bodoni Moda",serif;font-size:26px;font-weight:700;display:block}
+.verdict.right .call{color:var(--mint)}
+.verdict.wrong .call{color:var(--coral)}
+.spellout{
+  font-family:"IBM Plex Mono",monospace;font-size:clamp(19px,5.5vw,26px);
+  letter-spacing:.16em;margin-top:10px;word-break:break-word
+}
+.spellout b{color:var(--coral);font-weight:600;border-bottom:2px solid var(--coral)}
+.yours{font-size:14px;color:var(--muted);margin-top:8px;font-family:"IBM Plex Mono",monospace;word-break:break-word}
+
+/* ---------- results ---------- */
+.score{text-align:center;margin-bottom:8px}
+.score .big{font-family:"Bodoni Moda",serif;font-size:76px;line-height:1;font-weight:700;color:var(--brass)}
+.score .of{font-family:"Bodoni Moda",serif;font-size:30px;color:var(--muted)}
+.verdictline{font-family:"Bodoni Moda",serif;font-style:italic;font-size:20px;text-align:center;margin:4px 0 24px}
+.review{display:grid;gap:0}
+.miss{border-top:1px solid var(--rule);padding:14px 0}
+.miss:last-child{border-bottom:1px solid var(--rule)}
+.miss .word{font-family:"IBM Plex Mono",monospace;font-size:17px;letter-spacing:.1em;color:var(--brass)}
+.miss .gave{font-size:13px;color:var(--muted);font-family:"IBM Plex Mono",monospace}
+.miss .def{font-size:14px;color:var(--muted);margin:5px 0 0}
+.outro{display:grid;gap:10px;margin-top:26px}
+.banner{
+  border:1px solid rgba(228,105,91,.4);background:rgba(228,105,91,.08);
+  border-radius:10px;padding:12px 14px;font-size:14px;margin-bottom:20px;color:#F2C0B9
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Step to the microphone</p>
+    <h1>Spelling Bee<em>practice with the pronouncer</em></h1>
+  </header>
+
+  <div id="audioWarn" class="banner hidden">Your browser won't speak the words. The definition, sentence, and origin clues still work — or have someone read the words aloud.</div>
+
+  <!-- ══════════ SETUP ══════════ -->
+  <section id="setup">
+    <p class="lede">Pick a level. You'll hear each word read aloud — ask for clues the way a real speller does, then spell it.</p>
+
+    <div class="levels" id="levels"></div>
+
+    <div class="chiprow">
+      <span class="label">Words this round</span>
+      <button class="chip" data-count="5">5</button>
+      <button class="chip" data-count="10" aria-pressed="true">10</button>
+      <button class="chip" data-count="15">15</button>
+    </div>
+
+    <button class="begin" id="beginBtn">Start the round</button>
+    <p class="note">Synthetic voices stumble on rare words. On the hardest level, lean on the origin and sentence clues.</p>
+  </section>
+
+  <!-- ══════════ ROUND ══════════ -->
+  <section id="round" class="hidden">
+    <div class="roundbar">
+      <span class="label" id="roundLabel"></span>
+      <div class="dots" id="dots"></div>
+    </div>
+
+    <div class="card">
+      <div class="podium">
+        <button class="orb" id="orb" aria-label="Hear the word">
+          <span class="bars"><i></i><i></i><i></i><i></i><i></i></span>
+        </button>
+        <p id="orbHint">Tap to hear your word</p>
+      </div>
+
+      <div class="asks">
+        <button class="ask" data-ask="repeat">Repeat, please</button>
+        <button class="ask" data-ask="slow">Say it slowly</button>
+        <button class="ask" data-ask="def">Definition</button>
+        <button class="ask" data-ask="sent">Use it in a sentence</button>
+        <button class="ask" data-ask="orig">Language of origin</button>
+      </div>
+      <div class="slips" id="slips"></div>
+
+      <div class="answer">
+        <input id="spellInput" type="text" placeholder="spell the word"
+               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="text">
+        <div class="actions">
+          <button class="primary" id="submitBtn">Spell it</button>
+          <button class="ghost" id="passBtn">I don't know</button>
+        </div>
+      </div>
+
+      <div class="verdict" id="verdict" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- ══════════ RESULTS ══════════ -->
+  <section id="results" class="hidden">
+    <div class="score"><span class="big" id="finalScore">0</span><span class="of" id="finalOf">/10</span></div>
+    <p class="verdictline" id="finalLine"></p>
+    <div id="reviewWrap">
+      <p class="label" style="margin-bottom:10px">Words to take home</p>
+      <div class="review" id="review"></div>
+    </div>
+    <div class="outro">
+      <button class="begin" id="againBtn">Spell the missed words</button>
+      <button class="ghost" id="newRoundBtn" style="width:100%">New round, same level</button>
+      <button class="ghost" id="backBtn" style="width:100%">Change level</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ─────────────────  WORD LIST  ───────────────── */
+const LEVELS = [
+  { name:"Sprout", desc:"Everyday words — early grades", words:[
+    {w:"friend",d:"A person you like and trust.",s:"My friend saved me a seat at lunch.",o:"Old English"},
+    {w:"because",d:"For the reason that.",s:"We stayed inside because it was raining.",o:"Middle English"},
+    {w:"beautiful",d:"Very pleasing to look at.",s:"The garden was beautiful in the spring.",o:"French"},
+    {w:"family",d:"A group of people related to each other.",s:"My whole family came to the concert.",o:"Latin"},
+    {w:"animal",d:"A living creature that is not a plant.",s:"A wombat is my favorite animal.",o:"Latin"},
+    {w:"holiday",d:"A day of celebration when people rest from work.",s:"The bank is closed for the holiday.",o:"Old English, from the words for holy day"},
+    {w:"together",d:"With each other.",s:"We built the model together.",o:"Old English"},
+    {w:"question",d:"A sentence that asks for an answer.",s:"She raised her hand to ask a question.",o:"Latin"},
+    {w:"believe",d:"To accept that something is true.",s:"I believe you left your keys in the car.",o:"Old English"},
+    {w:"morning",d:"The early part of the day.",s:"The birds sing loudest in the morning.",o:"Middle English"},
+    {w:"garden",d:"A piece of ground where plants are grown.",s:"Tomatoes are taking over the garden.",o:"Old French"},
+    {w:"listen",d:"To pay attention to a sound.",s:"Listen for the doorbell while I cook.",o:"Old English"},
+    {w:"birthday",d:"The yearly return of the date a person was born.",s:"Her birthday falls on a Saturday this year.",o:"Old English"},
+    {w:"chocolate",d:"A sweet food made from cacao seeds.",s:"He melted the chocolate for the cake.",o:"Nahuatl, by way of Spanish"},
+    {w:"castle",d:"A large fortified building.",s:"The castle sits on a hill above the river.",o:"Latin"},
+    {w:"whistle",d:"To make a high sound by blowing air through the lips.",s:"The referee blew the whistle to stop play.",o:"Old English"},
+    {w:"science",d:"The study of the natural world through observation.",s:"We ran an experiment in science class.",o:"Latin"},
+    {w:"afternoon",d:"The time between noon and evening.",s:"Practice starts in the afternoon.",o:"Middle English"},
+    {w:"library",d:"A place where books are kept for reading and borrowing.",s:"The library stays open until nine.",o:"Latin, from the word for book"},
+    {w:"sandwich",d:"Food served between two slices of bread.",s:"He packed a sandwich for the hike.",o:"English, from the name of an English earl"}
+  ]},
+  { name:"Scholar", desc:"The classic troublemakers", words:[
+    {w:"necessary",d:"Needed; required.",s:"Sleep is necessary before a long drive.",o:"Latin"},
+    {w:"separate",d:"To set or keep apart.",s:"Please separate the recycling from the trash.",o:"Latin"},
+    {w:"definitely",d:"Without any doubt.",s:"I will definitely be there by six.",o:"Latin"},
+    {w:"calendar",d:"A chart showing the days and months of a year.",s:"Mark the dentist visit on the calendar.",o:"Latin"},
+    {w:"rhythm",d:"A regular repeated pattern of sound or movement.",s:"The drummer kept a steady rhythm.",o:"Greek"},
+    {w:"restaurant",d:"A place where meals are served to customers.",s:"The restaurant on the corner opens at noon.",o:"French"},
+    {w:"receive",d:"To be given something.",s:"Did you receive my letter?",o:"Latin, by way of Old French"},
+    {w:"embarrass",d:"To make someone feel awkward or ashamed.",s:"Don't embarrass him in front of his team.",o:"French"},
+    {w:"February",d:"The second month of the year.",s:"The lease ends in February.",o:"Latin"},
+    {w:"government",d:"The group of people who rule a country or state.",s:"The government published the new budget.",o:"Old French"},
+    {w:"tomorrow",d:"The day after today.",s:"The report is due tomorrow.",o:"Old English"},
+    {w:"argument",d:"A disagreement, or a reason given to support a view.",s:"Her argument convinced the whole room.",o:"Latin"},
+    {w:"business",d:"An occupation or commercial activity.",s:"She runs a small catering business.",o:"Old English"},
+    {w:"jewelry",d:"Ornaments such as rings and necklaces.",s:"He keeps the jewelry in a locked drawer.",o:"Old French"},
+    {w:"neighbor",d:"A person who lives near another.",s:"Our neighbor watches the cat when we travel.",o:"Old English"},
+    {w:"privilege",d:"A special right given to a person or group.",s:"Driving is a privilege, not a right.",o:"Latin"},
+    {w:"vacuum",d:"A space with no matter in it; also a cleaning machine.",s:"Sound cannot travel through a vacuum.",o:"Latin"},
+    {w:"license",d:"An official permit to do something.",s:"Bring your license to the counter.",o:"Latin"},
+    {w:"weird",d:"Strange or unusual.",s:"That was a weird thing to say.",o:"Old English, from the word for fate"},
+    {w:"conscience",d:"The inner sense of right and wrong.",s:"His conscience kept him awake all night.",o:"Latin"}
+  ]},
+  { name:"Regional", desc:"Long words, borrowed spellings", words:[
+    {w:"maintenance",d:"The work of keeping something in good condition.",s:"The elevator is closed for maintenance.",o:"Old French"},
+    {w:"questionnaire",d:"A printed set of questions used to gather information.",s:"Every guest filled out a questionnaire.",o:"French"},
+    {w:"perseverance",d:"Continued effort in spite of difficulty.",s:"Her perseverance finally paid off.",o:"Latin"},
+    {w:"bureaucracy",d:"A system of government by many departments and officials.",s:"The permit was lost somewhere in the bureaucracy.",o:"French and Greek"},
+    {w:"silhouette",d:"A dark outline of something against a lighter background.",s:"We saw the silhouette of a deer at dusk.",o:"French, from a person's surname"},
+    {w:"camouflage",d:"Coloring or covering that hides something.",s:"The moth's camouflage matched the bark exactly.",o:"French"},
+    {w:"connoisseur",d:"An expert judge in matters of taste.",s:"He is a connoisseur of old maps.",o:"French"},
+    {w:"entrepreneur",d:"A person who starts and runs a business.",s:"The entrepreneur raised money for her second company.",o:"French"},
+    {w:"liaison",d:"A person or link that connects two groups.",s:"She acts as the liaison between the school and the city.",o:"French"},
+    {w:"millennium",d:"A period of one thousand years.",s:"The cathedral has stood for most of a millennium.",o:"Latin"},
+    {w:"pharaoh",d:"A ruler of ancient Egypt.",s:"The pharaoh was buried with his treasures.",o:"Egyptian, by way of Greek"},
+    {w:"reminiscent",d:"Bringing something to mind; suggestive of.",s:"The smell was reminiscent of my grandmother's kitchen.",o:"Latin"},
+    {w:"surveillance",d:"Close watch kept over a person or place.",s:"The lobby is under constant surveillance.",o:"French"},
+    {w:"vengeance",d:"Punishment inflicted in return for a wrong.",s:"He wanted justice, not vengeance.",o:"Old French"},
+    {w:"hierarchy",d:"A system in which people or things are ranked one above another.",s:"The company flattened its hierarchy.",o:"Greek"},
+    {w:"mischievous",d:"Playfully causing trouble.",s:"The puppy wore a mischievous look.",o:"Old French"},
+    {w:"acquiesce",d:"To accept something reluctantly but without protest.",s:"She had to acquiesce to the committee's decision.",o:"Latin"},
+    {w:"sacrilegious",d:"Showing disrespect toward something sacred.",s:"Wearing shoes inside was considered sacrilegious.",o:"Latin"},
+    {w:"exhilarate",d:"To make someone feel very happy and lively.",s:"Cold mountain air seems to exhilarate him.",o:"Latin"},
+    {w:"onomatopoeia",d:"The forming of a word that imitates a sound.",s:"Buzz and hiss are examples of onomatopoeia.",o:"Greek"}
+  ]},
+  { name:"Championship", desc:"The words that end bees", words:[
+    {w:"chiaroscuro",d:"The treatment of light and shade in art.",s:"The portrait's chiaroscuro pulls the eye to the face.",o:"Italian"},
+    {w:"logorrhea",d:"Excessive and often incoherent talkativeness.",s:"His logorrhea filled the entire meeting.",o:"Greek"},
+    {w:"appoggiatura",d:"An ornamental note that delays a principal note in music.",s:"The singer leaned into the appoggiatura.",o:"Italian"},
+    {w:"prospicience",d:"The act of looking forward; foresight.",s:"The plan showed unusual prospicience.",o:"Latin"},
+    {w:"autochthonous",d:"Native to the place where found; indigenous.",s:"The ferns are autochthonous to the island.",o:"Greek"},
+    {w:"feuilleton",d:"The part of a newspaper given to light literature and criticism.",s:"Her essay ran in the paper's feuilleton.",o:"French"},
+    {w:"koinonia",d:"Fellowship or communion within a religious community.",s:"The small church prized its koinonia.",o:"Greek"},
+    {w:"scherzo",d:"A lively, playful movement in a musical work.",s:"The scherzo raced past in three minutes.",o:"Italian"},
+    {w:"cymotrichous",d:"Having wavy hair.",s:"The record described the sailor as cymotrichous.",o:"Greek"},
+    {w:"guetapens",d:"An ambush or trap.",s:"The convoy rode straight into a guetapens.",o:"French"},
+    {w:"stichomythia",d:"Dialogue in alternating single lines, as in Greek drama.",s:"The quarrel is written as stichomythia.",o:"Greek"},
+    {w:"knaidel",d:"A small dumpling, usually made with matzo meal.",s:"One knaidel floated in the broth.",o:"Yiddish"},
+    {w:"marocain",d:"A dress fabric of ribbed crepe.",s:"The gown was cut from black marocain.",o:"French"},
+    {w:"nunatak",d:"A hill or peak surrounded by glacial ice.",s:"A single nunatak broke the white plain.",o:"Greenlandic"},
+    {w:"succedaneum",d:"A substitute, especially for a medicine.",s:"Chicory served as a succedaneum for coffee.",o:"Latin"},
+    {w:"elucubrate",d:"To produce a written work by long study, especially at night.",s:"He would elucubrate until the candle burned out.",o:"Latin"},
+    {w:"esquamulose",d:"Not covered in small scales.",s:"The specimen's esquamulose surface surprised the botanist.",o:"Latin"},
+    {w:"insouciant",d:"Free from worry; casually unconcerned.",s:"She gave an insouciant shrug and walked on.",o:"French"},
+    {w:"vivisepulture",d:"The practice of burying someone alive.",s:"The old law named vivisepulture as a punishment.",o:"Latin"},
+    {w:"psammophile",d:"An organism that thrives in sandy places.",s:"The beetle is a psammophile of the coastal dunes.",o:"Greek"}
+  ]}
+];
+
+/* ─────────────────  STATE  ───────────────── */
+let levelIdx = 1, perRound = 10, queue = [], pos = 0, hits = 0, missed = [], answered = false;
+
+/* ─────────────────  SPEECH  ───────────────── */
+const orb = document.getElementById('orb');
+let voice = null;
+const canSpeak = 'speechSynthesis' in window;
+function loadVoice(){
+  if(!canSpeak) return;
+  const vs = speechSynthesis.getVoices();
+  voice = vs.find(v=>/en[-_]US/i.test(v.lang) && /natural|google|samantha|zira/i.test(v.name))
+       || vs.find(v=>/en[-_]US/i.test(v.lang))
+       || vs.find(v=>/^en/i.test(v.lang)) || null;
+}
+if(canSpeak){ loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
+else document.getElementById('audioWarn').classList.remove('hidden');
+
+function speak(text, rate){
+  if(!canSpeak) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = rate || 0.9; u.lang = 'en-US';
+  if(voice) u.voice = voice;
+  u.onstart = ()=> orb.classList.add('speaking');
+  u.onend = u.onerror = ()=> orb.classList.remove('speaking');
+  speechSynthesis.speak(u);
+}
+
+/* ─────────────────  SETUP SCREEN  ───────────────── */
+const levelsEl = document.getElementById('levels');
+LEVELS.forEach((lv,i)=>{
+  const b = document.createElement('button');
+  b.className = 'level'; b.setAttribute('aria-pressed', i===levelIdx);
+  b.innerHTML = `<span class="lv-num">${String(i+1).padStart(2,'0')}</span>
+    <span><span class="lv-name">${lv.name}</span><span class="lv-desc">${lv.desc}</span></span>`;
+  b.onclick = ()=>{
+    levelIdx = i;
+    [...levelsEl.children].forEach((c,j)=>c.setAttribute('aria-pressed', j===i));
+  };
+  levelsEl.appendChild(b);
+});
+document.querySelectorAll('.chip').forEach(c=>{
+  c.onclick = ()=>{
+    perRound = +c.dataset.count;
+    document.querySelectorAll('.chip').forEach(o=>o.setAttribute('aria-pressed', o===c));
+  };
+});
+
+/* ─────────────────  SCREENS  ───────────────── */
+function show(id){
+  ['setup','round','results'].forEach(s=>document.getElementById(s).classList.toggle('hidden', s!==id));
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function startRound(list){
+  queue = list || shuffle(LEVELS[levelIdx].words.slice()).slice(0, perRound);
+  pos = 0; hits = 0; missed = [];
+  show('round'); serve();
+}
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+/* ─────────────────  SERVING A WORD  ───────────────── */
+const slips = document.getElementById('slips');
+const input = document.getElementById('spellInput');
+const verdict = document.getElementById('verdict');
+const submitBtn = document.getElementById('submitBtn');
+const passBtn = document.getElementById('passBtn');
+
+function current(){ return queue[pos]; }
+
+function serve(){
+  answered = false;
+  slips.innerHTML = ''; verdict.className = 'verdict'; verdict.innerHTML = '';
+  input.value = ''; input.disabled = false;
+  submitBtn.textContent = 'Spell it';
+  passBtn.classList.remove('hidden');
+  document.querySelectorAll('.ask').forEach(a=>{a.dataset.used='0'; a.disabled=false;});
+  document.getElementById('roundLabel').textContent = `${LEVELS[levelIdx].name} · word ${pos+1} of ${queue.length}`;
+  document.getElementById('orbHint').textContent = 'Tap to hear your word';
+  drawDots();
+  speak(current().w);
+  input.focus();
+}
+
+function drawDots(){
+  const d = document.getElementById('dots'); d.innerHTML = '';
+  queue.forEach((_,i)=>{
+    const s = document.createElement('span'); s.className = 'dot';
+    if(i < pos) s.classList.add(queue[i]._got ? 'hit':'miss');
+    else if(i === pos) s.classList.add('now');
+    d.appendChild(s);
+  });
+}
+
+orb.onclick = ()=>{ speak(current().w); document.getElementById('orbHint').textContent='Listening again'; };
+
+document.querySelectorAll('.ask').forEach(btn=>{
+  btn.onclick = ()=>{
+    const c = current(), k = btn.dataset.ask;
+    if(k==='repeat'){ speak(c.w); return; }
+    if(k==='slow'){ speak(c.w, 0.45); return; }
+    if(btn.dataset.used==='1') return;
+    btn.dataset.used='1';
+    const map = {
+      def:  ['Definition', c.d, c.d],
+      sent: ['In a sentence', `<em>${c.s}</em>`, c.s],
+      orig: ['Language of origin', c.o, `It comes from ${c.o}.`]
+    }[k];
+    const el = document.createElement('div');
+    el.className = 'slip';
+    el.innerHTML = `<span class="label">${map[0]}</span><p>${map[1]}</p>`;
+    slips.appendChild(el);
+    speak(map[2]);
+  };
+});
+
+/* ─────────────────  JUDGING  ───────────────── */
+function judge(passed){
+  if(answered){ next(); return; }
+  const c = current();
+  const given = input.value.trim().toLowerCase();
+  if(!passed && !given){ input.focus(); return; }
+  const right = !passed && given === c.w.toLowerCase();
+  c._got = right;
+  if(right){ hits++; if(window.PlayKit) PlayKit.win(2); } else missed.push({...c, given: passed ? '' : input.value.trim()});
+
+  answered = true;
+  input.disabled = true;
+  document.querySelectorAll('.ask').forEach(a=>a.disabled=true);
+  passBtn.classList.add('hidden');
+  submitBtn.textContent = pos === queue.length-1 ? 'See the results' : 'Next word';
+
+  verdict.className = 'verdict ' + (right ? 'right':'wrong');
+  if(right){
+    verdict.innerHTML = `<span class="call">Correct.</span>`;
+  } else {
+    let out = '';
+    for(let i=0;i<c.w.length;i++){
+      const ch = c.w[i], mine = given[i];
+      out += (mine === ch.toLowerCase()) ? ch : `<b>${ch}</b>`;
+    }
+    verdict.innerHTML = `<span class="call">${passed ? 'The word was' : 'Not quite.'}</span>
+      <div class="spellout">${out}</div>
+      ${given ? `<div class="yours">you spelled: ${escapeHtml(given)}</div>`:''}`;
+    speak(c.w.split('').join(', '), 0.75);
+  }
+  drawDots();
+  submitBtn.focus();
+}
+function escapeHtml(s){ return s.replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+function next(){
+  pos++;
+  if(pos >= queue.length) finish(); else serve();
+}
+
+submitBtn.onclick = ()=> answered ? next() : judge(false);
+passBtn.onclick   = ()=> judge(true);
+input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); judge(false); }});
+
+/* ─────────────────  RESULTS  ───────────────── */
+function finish(){
+  if(canSpeak) speechSynthesis.cancel();
+  const total = queue.length;
+  document.getElementById('finalScore').textContent = hits;
+  document.getElementById('finalOf').textContent = '/' + total;
+  const pct = hits/total;
+  document.getElementById('finalLine').textContent =
+    pct === 1 ? 'A clean round. Nothing to take home.' :
+    pct >= .8 ? 'Strong round — a few words to sharpen.' :
+    pct >= .5 ? 'Halfway there. The list below is your homework.' :
+                'Rough round. These words are worth a second pass.';
+
+  const rw = document.getElementById('reviewWrap');
+  const rev = document.getElementById('review'); rev.innerHTML = '';
+  rw.classList.toggle('hidden', missed.length===0);
+  missed.forEach(m=>{
+    const el = document.createElement('div');
+    el.className = 'miss';
+    el.innerHTML = `<div class="word">${m.w}</div>
+      ${m.given ? `<div class="gave">you spelled: ${escapeHtml(m.given)}</div>`:'<div class="gave">passed</div>'}
+      <p class="def">${m.d}</p>`;
+    rev.appendChild(el);
+  });
+  document.getElementById('againBtn').classList.toggle('hidden', missed.length===0);
+  show('results');
+}
+
+document.getElementById('beginBtn').onclick = ()=> startRound(null);
+document.getElementById('againBtn').onclick = ()=> startRound(shuffle(missed.map(m=>({w:m.w,d:m.d,s:m.s,o:m.o}))));
+document.getElementById('newRoundBtn').onclick = ()=> startRound(null);
+document.getElementById('backBtn').onclick = ()=>{ if(canSpeak) speechSynthesis.cancel(); show('setup'); };
+</script>
+
+<script src="playkit.js"></script>
+</body>
+</html>

@@ -605,6 +605,7 @@ function submit(){
   state.locked = true;
   if (given === q.answer){
     state.right++;
+    if(window.PlayKit) PlayKit.win();
     slot.classList.add("ok"); fb.className = "feedback ok"; fb.textContent = "Correct!";
     setTimeout(next, 600);
   } else {
@@ -701,5 +702,7 @@ loadBest();
 
 })();
 </script>
+
+<script src="playkit.js"></script>
 </body>
 </html>

@@ -674,5 +674,86 @@ function twinkle(){
 seed(); twinkle();
 addEventListener("resize", seed);
 </script>
+
+<style>
+#mBtn{position:fixed;left:12px;bottom:calc(88px + env(safe-area-inset-bottom));z-index:2147482000;
+  padding:11px 16px;border-radius:999px;border:3px solid #2B2140;background:#FF9F1C;color:#2B2140;
+  font:800 15px ui-rounded,'Fredoka','Nunito',system-ui,sans-serif;box-shadow:3px 3px 0 #2B2140;cursor:pointer}
+#mBtn:active{transform:translate(3px,3px);box-shadow:0 0 0 #2B2140}
+#mBtn.on{background:#FF5D8F}
+#mBan{position:fixed;left:50%;transform:translateX(-50%) translateY(-120%);
+  top:calc(10px + env(safe-area-inset-top));z-index:2147482001;max-width:92vw;
+  padding:13px 20px;border-radius:20px;border:3px solid #2B2140;background:#fff;color:#2B2140;
+  font:700 20px ui-rounded,'Fredoka','Nunito',system-ui,sans-serif;text-align:center;
+  box-shadow:4px 4px 0 #2B2140;transition:transform .3s cubic-bezier(.2,1.4,.4,1)}
+#mBan.on{transform:translateX(-50%) translateY(0)}
+#mBan small{display:block;font-size:12px;font-weight:800;opacity:.55;margin-top:3px}
+@media(prefers-reduced-motion:reduce){#mBan{transition:none}}
+</style>
+<script>
+(function(){
+  var TARGETS = ["sun","mercury","venus","earth","mars","jupiter","saturn","uranus","neptune"];
+  var ROUNDS = 5;
+  var on = false, want = null, done = 0, pool = [];
+
+  var btn = document.createElement("button");
+  btn.id = "mBtn"; btn.textContent = "🚀 Mission";
+  var ban = document.createElement("div"); ban.id = "mBan";
+  document.body.appendChild(btn); document.body.appendChild(ban);
+
+  function nameOf(id){
+    var w = (window.WORLDS||[]).find(function(x){return x.id===id;});
+    return w ? w.name : id;
+  }
+  function banner(msg, sub){
+    ban.innerHTML = msg + (sub ? "<small>"+sub+"</small>" : "");
+    ban.classList.add("on");
+  }
+  function hide(){ ban.classList.remove("on"); }
+  function talk(t){
+    try{ if(typeof say === "function"){ say(t); return; } }catch(e){}
+    try{ var u=new SpeechSynthesisUtterance(t); u.lang="en-IN"; u.rate=.85; speechSynthesis.speak(u); }catch(e){}
+  }
+
+  function ask(){
+    if(!pool.length) pool = TARGETS.slice().sort(function(){return Math.random()-.5;});
+    want = pool.pop();
+    banner("Find " + nameOf(want) + "!", "Mission " + (done+1) + " of " + ROUNDS);
+    talk("Find " + nameOf(want));
+  }
+  function start(){
+    on = true; done = 0; pool = []; btn.classList.add("on"); btn.textContent = "✕ Stop";
+    ask();
+  }
+  function stop(){
+    on = false; want = null; btn.classList.remove("on"); btn.textContent = "🚀 Mission"; hide();
+  }
+  btn.addEventListener("click", function(){ on ? stop() : start(); });
+
+  var orig = window.select;
+  window.select = function(id){
+    var r = orig.apply(this, arguments);
+    if(!on || !want) return r;
+    if(id === want){
+      done++;
+      if(window.PlayKit) PlayKit.win(2);
+      if(done >= ROUNDS){
+        banner("Mission complete! 🏆", "You found all " + ROUNDS);
+        talk("Mission complete! Fantastic flying.");
+        setTimeout(stop, 4000);
+      }else{
+        banner("Yes! That is " + nameOf(want) + " ⭐");
+        setTimeout(function(){ if(on) ask(); }, 2200);
+      }
+    }else{
+      banner("That is " + nameOf(id) + ".", "Now find " + nameOf(want));
+      setTimeout(function(){ if(on && want) talk("Find " + nameOf(want)); }, 900);
+    }
+    return r;
+  };
+})();
+</script>
+
+<script src="playkit.js"></script>
 </body>
 </html>
