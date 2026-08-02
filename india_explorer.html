@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Bharat Sky Tour — Fly to every state</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Mukta:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sea:#35c6e8;
+    --sea-2:#12a3cc;
+    --sea-3:#0a6f96;
+    --paper:#fffdf6;
+    --ink:#173a52;
+    --ink-soft:#4a6d86;
+    --saffron:#ff8a1f;
+    --pink:#ff5fa2;
+    --violet:#8b5cf6;
+    --green:#2fbf71;
+    --sky:#3fb8ff;
+    --sun:#ffd23f;
+    --shadow:0 12px 30px rgba(6,40,55,.22);
+    --r:22px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Mukta',system-ui,-apple-system,'Segoe UI',sans-serif;
+    background:
+      radial-gradient(circle at 8% 4%, #ffd23f 0%, transparent 30%),
+      radial-gradient(circle at 92% 6%, #ff5fa2 0%, transparent 32%),
+      radial-gradient(circle at 4% 96%, #8b5cf6 0%, transparent 34%),
+      radial-gradient(circle at 96% 94%, #2fbf71 0%, transparent 34%),
+      linear-gradient(160deg,#3fb8ff 0%,#12a3cc 55%,#0a6f96 100%);
+    color:var(--ink);
+    min-height:100vh;
+    -webkit-text-size-adjust:100%;
+  }
+
+  /* ---------- header ---------- */
+  header{
+    padding:18px 16px 10px;
+    text-align:center;
+  }
+  h1{
+    font-family:'Baloo 2',cursive;
+    font-weight:800;
+    font-size:clamp(28px,7.5vw,48px);
+    line-height:1.05;
+    margin:0;
+    color:#fff;
+    letter-spacing:-.5px;
+    text-shadow:0 3px 0 rgba(0,0,0,.18), 0 0 22px rgba(255,255,255,.35);
+  }
+  h1 .tint{color:var(--sun);text-shadow:0 3px 0 #c98c00}
+  .sub{
+    font-size:15px;color:#fff;margin:8px 0 0;font-weight:700;
+    text-shadow:0 1px 6px rgba(0,40,60,.5);
+  }
+
+  .wrap{
+    max-width:1180px;margin:0 auto;padding:0 12px 60px;
+    display:grid;gap:14px;
+  }
+  @media(min-width:960px){
+    .wrap{grid-template-columns:1.25fr .95fr;align-items:start}
+    .mapcard{grid-column:1}
+    .side{grid-column:2;position:sticky;top:12px}
+  }
+
+  /* ---------- map ---------- */
+  .mapcard{
+    background:linear-gradient(180deg,#48d3f0,#0d86ad);
+    border-radius:var(--r);
+    padding:8px;
+    box-shadow:var(--shadow);
+    border:4px solid #fff;
+    overflow:hidden;
+  }
+  svg#map{display:block;width:100%;height:auto;border-radius:12px;touch-action:manipulation}
+
+  .marker{cursor:pointer}
+  .state{cursor:pointer}
+  .state path{transition:fill .18s ease, stroke .18s ease}
+  .state:hover path{fill:#fff6b8}
+  .state.active path{fill:#ffe066;stroke:#173a52;stroke-width:3.4}
+  .stlabel{
+    font-family:'Mukta',sans-serif;font-size:11.5px;font-weight:800;fill:#26506b;
+    paint-order:stroke;stroke:rgba(255,255,255,.92);stroke-width:3px;stroke-linejoin:round;
+    pointer-events:none;letter-spacing:.2px;
+  }
+  .rivlabel{
+    font-family:'Mukta',sans-serif;font-size:10.5px;font-weight:800;fill:#0b5f7a;font-style:italic;
+    paint-order:stroke;stroke:rgba(255,255,255,.9);stroke-width:3px;stroke-linejoin:round;
+    pointer-events:none;letter-spacing:.6px;
+  }
+  #rivers.off{display:none}
+  .mapstage{position:relative}
+  .maptalk{
+    position:absolute;left:10px;right:10px;bottom:10px;
+    background:rgba(255,255,255,.55);
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    border:2.5px solid rgba(47,127,214,.7);border-radius:16px;
+    padding:9px 13px;color:#0d2438;font-size:16px;line-height:1.3;font-weight:700;
+    text-shadow:0 1px 2px rgba(255,255,255,.95);
+    box-shadow:0 6px 18px rgba(4,30,40,.22);
+    animation:talkin .3s ease both;
+  }
+  .maptalk.g{border-color:rgba(224,71,155,.75);background:rgba(255,244,249,.55)}
+  .maptalk[hidden]{display:none}
+  .maptalk b{
+    display:block;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;
+    color:#1c62b0;margin-bottom:2px;font-weight:800;
+  }
+  .maptalk.g b{color:#c62b7c}
+  .maptalk .tick{font-size:10.5px;color:#4a6d86;font-weight:800;margin-top:3px;display:block}
+  @keyframes talkin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  .zoomers{position:absolute;right:14px;top:14px;display:grid;gap:6px}
+  .zoomers button{
+    width:40px;height:40px;border-radius:12px;font-size:22px;font-weight:800;line-height:1;
+    background:rgba(255,255,255,.82);color:#123a52;box-shadow:0 3px 0 rgba(0,0,0,.18);
+    -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+  }
+  .zoomers button:active{transform:translateY(2px);box-shadow:none}
+  .marker circle.hit{fill:transparent}
+  .marker .dot{transition:r .18s ease, fill .18s ease}
+  .marker:hover .dot,.marker:focus .dot{fill:#fff}
+  .marker.active .dot{fill:#fff}
+  .mlabel{
+    font-family:'Mukta',sans-serif;font-size:11px;font-weight:800;
+    fill:#08313d;paint-order:stroke;stroke:#ffffff;stroke-width:3.5px;stroke-linejoin:round;
+    pointer-events:none;
+  }
+  .nlabel{font-family:'Mukta';font-size:13px;font-weight:800;fill:#c9ecf3;letter-spacing:.4px;pointer-events:none}
+  .oceanlabel{
+    font-family:'Baloo 2';font-size:17px;font-weight:700;fill:#a9e6f2;letter-spacing:1.5px;
+  }
+  .neighbour{cursor:pointer}
+  .neighbour:hover ellipse{fill:#14657a}
+  .peak{cursor:pointer}
+  .kailashlabel{font-family:'Baloo 2';font-size:15px;font-weight:800;fill:#fff;paint-order:stroke;stroke:#2b4f66;stroke-width:3px}
+
+  /* ---------- controls ---------- */
+  .bar{
+    display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px
+  }
+  button{font-family:'Mukta',sans-serif;cursor:pointer;border:0}
+  .btn{
+    background:var(--saffron);color:#fff;font-weight:800;font-size:14px;
+    padding:11px 17px;border-radius:999px;box-shadow:0 5px 0 rgba(0,0,0,.22);
+    transition:transform .08s ease;
+  }
+  .btn:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.22)}
+  #voiceBtn{background:var(--green)}
+  #voiceBtn:not(.on){background:#8aa2b0}
+  #riverBtn{background:var(--sky)}
+  #riverBtn:not(.on){background:#8aa2b0}
+  #kailashBtn{background:var(--violet)}
+  #wholeBtn{background:var(--pink)}
+  .btn:focus-visible,.marker:focus-visible,.chip:focus-visible{outline:3px solid #ffd76e;outline-offset:3px}
+
+  /* ---------- side panel ---------- */
+  .side{display:grid;gap:12px}
+  .card{
+    background:var(--paper);border-radius:var(--r);box-shadow:var(--shadow);
+    padding:18px;border:4px solid #fff;
+  }
+  .place-eyebrow{
+    font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--pink);margin:0
+  }
+  .place-name{
+    font-family:'Baloo 2';font-weight:800;font-size:clamp(26px,6.5vw,36px);line-height:1.1;margin:2px 0 12px;color:var(--ink)
+  }
+  .facts{display:grid;gap:9px;margin:0 0 12px}
+  .fact{
+    display:flex;gap:11px;align-items:flex-start;
+    background:#fff;border:3px solid #ffe08a;border-radius:16px;padding:10px 12px;
+  }
+  .fact:nth-child(2){border-color:#a8e6ff}
+  .fact:nth-child(3){border-color:#ffc2dd}
+  .fact svg{flex:0 0 auto;margin-top:2px}
+  .fact b{display:block;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#8a6d3d;font-weight:800}
+  .fact span{font-size:18px;font-weight:700;color:var(--ink);line-height:1.25}
+
+  .talk{display:grid;gap:10px}
+  .bubblerow{display:flex;gap:10px;align-items:flex-end}
+  .bubblerow.girl{flex-direction:row-reverse}
+  .bubble{
+    flex:1;background:#eef9ff;border:2px solid #c7e7f6;border-radius:16px;padding:10px 13px;
+    font-size:16px;line-height:1.35;font-weight:600;position:relative;
+    animation:pop .35s cubic-bezier(.2,1.4,.4,1) both;
+  }
+  .bubblerow.girl .bubble{background:#fff0f6;border-color:#f8cfe3}
+  @keyframes pop{from{opacity:0;transform:translateY(8px) scale(.94)}to{opacity:1;transform:none}}
+  .who{font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#6f8ba0;display:block;margin-bottom:2px}
+  .kid{width:56px;height:70px;flex:0 0 auto;transition:transform .2s ease}
+  .bubblerow.speaking .kid{transform:scale(1.14) translateY(-3px)}
+  .bubble.speaking{
+    border-color:var(--saffron);
+    box-shadow:0 0 0 4px rgba(255,122,24,.22);
+    background:#fff6e8;
+  }
+  .bubblerow.girl .bubble.speaking{background:#fff0f6;border-color:#e0479b;box-shadow:0 0 0 4px rgba(224,71,155,.2)}
+  .vrow{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+  .vname{
+    font-size:12px;font-weight:800;padding:5px 10px;border-radius:999px;flex:0 0 auto;
+    background:#eef9ff;border:2px solid #a5d8ff;color:var(--ink);
+  }
+  .vname.g{background:#fff0f6;border-color:#fcc2d7}
+  .vrow select{
+    flex:1;min-width:0;font-family:'Mukta',sans-serif;font-size:13px;font-weight:700;
+    padding:8px 10px;border-radius:12px;border:3px solid #ffe08a;background:#fff;color:var(--ink);
+  }
+  .mini{
+    background:var(--violet);color:#fff;font-weight:800;font-size:12px;
+    padding:8px 12px;border-radius:999px;flex:0 0 auto;box-shadow:0 3px 0 rgba(0,0,0,.2);
+  }
+  .mini:active{transform:translateY(2px);box-shadow:none}
+  .guides{display:flex;gap:14px;margin:0 0 10px}
+  .guides span{
+    display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:var(--ink);
+    background:#eef9ff;border:3px solid #a5d8ff;border-radius:999px;padding:4px 12px 4px 4px;
+  }
+  .guides span:last-child{background:#fff0f6;border-color:#fcc2d7}
+  .guides .kid{width:34px;height:42px}
+  .soundrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+  .replay{
+    background:var(--green);color:#fff;font-weight:800;font-size:14px;
+    padding:9px 15px;border-radius:999px;box-shadow:0 4px 0 #12653a;display:inline-flex;gap:7px;align-items:center;
+  }
+  .replay:active{transform:translateY(3px);box-shadow:0 1px 0 #12653a}
+  .speed{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:#8a6d3d;letter-spacing:1px;text-transform:uppercase}
+  .speed input{width:96px;accent-color:var(--saffron)}
+  .notice{
+    background:#fff3d6;border:2px solid #ffd18a;border-radius:12px;padding:9px 12px;
+    font-size:14px;font-weight:700;color:#7a5a1e;margin-top:10px
+  }
+  .tapfirst{
+    position:fixed;inset:0;background:rgba(6,40,55,.82);display:grid;place-items:center;z-index:50;
+    padding:24px;text-align:center;
+  }
+  .tapfirst .box{background:var(--paper);border-radius:22px;padding:26px 22px;max-width:340px;border:3px solid #ffd18a}
+  .tapfirst h3{font-family:'Baloo 2';font-size:26px;margin:10px 0 6px;color:var(--ink)}
+  .tapfirst p{font-size:15px;font-weight:600;color:#6b563a;margin:0 0 16px}
+
+  .list{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{
+    background:#fff;border:3px solid #ffdca8;border-radius:999px;padding:7px 13px;
+    font-size:13.5px;font-weight:800;color:#3f5b6d;cursor:pointer;
+  }
+  .chip:hover{transform:translateY(-1px)}
+  .chip.on{background:var(--green);border-color:var(--green);color:#fff}
+  .sectitle{
+    font-family:'Baloo 2';font-weight:700;font-size:20px;margin:0 0 10px;color:var(--ink)
+  }
+  .hint{font-size:13px;color:#6f8ba0;margin:10px 0 0;font-weight:700}
+  .status{
+    text-align:center;color:#fff;font-size:14px;font-weight:800;min-height:20px;margin-top:10px;
+    text-shadow:0 1px 5px rgba(0,40,60,.5)
+  }
+  @media (prefers-reduced-motion: reduce){
+    .bubble{animation:none}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Bharat <span class="tint">Sky Tour</span></h1>
+  <p class="sub">Tap any state — the plane flies there, and Jaisvik &amp; Klinkaara hop out to tell you about it.</p>
+</header>
+
+<div class="wrap">
+
+  <div class="mapcard">
+    <div class="mapstage">
+    <svg id="map" viewBox="0 0 850 985" role="img" aria-label="Interactive map of India">
+      <defs>
+        <linearGradient id="seaGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#5fd8f2"/>
+          <stop offset="55%" stop-color="#22aed4"/>
+          <stop offset="100%" stop-color="#0b7ba1"/>
+        </linearGradient>
+        <linearGradient id="landGrad" x1="0" y1="0" x2="0.3" y2="1">
+          <stop offset="0%" stop-color="#fff3d6"/>
+          <stop offset="100%" stop-color="#ffe4b0"/>
+        </linearGradient>
+        <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#032430" flood-opacity=".45"/>
+        </filter>
+        <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+          <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#ffd76e" flood-opacity=".9"/>
+        </filter>
+      </defs>
+
+      <rect width="850" height="985" fill="url(#seaGrad)"/>
+      <g id="waves"></g>
+      <g id="oceans"></g>
+      <g id="neighbours"></g>
+      <g id="landLayer"></g>
+      <g id="himalaya"></g>
+      <g id="islands"></g>
+      <g id="trail"></g>
+      <g id="markers"></g>
+      <g id="ground"></g>
+      <g id="plane"></g>
+      <g id="speech"></g>
+    </svg>
+      <div class="zoomers">
+        <button id="zinBtn" aria-label="Zoom in">+</button>
+        <button id="zoutBtn" aria-label="Zoom out">−</button>
+      </div>
+      <div id="mapTalk" class="maptalk" hidden></div>
+    </div>
+
+    <div class="bar">
+      <button class="btn" id="randomBtn">Fly somewhere new</button>
+      <button class="btn ghost on" id="voiceBtn" aria-pressed="true">Voices on</button>
+      <button class="btn" id="wholeBtn">Whole map</button>
+      <button class="btn ghost on" id="riverBtn" aria-pressed="true">Rivers on</button>
+      <button class="btn ghost" id="kailashBtn">Visit Mount Kailash</button>
+    </div>
+    <p class="status" id="status">Ready for take-off.</p>
+  </div>
+
+  <div class="side">
+    <div class="card" id="infoCard"></div>
+
+    <div class="card" id="voiceCard">
+      <h2 class="sectitle">Voices</h2>
+      <div class="vrow">
+        <span class="vname b">Jaisvik</span>
+        <select id="boyVoice" aria-label="Voice for Jaisvik"></select>
+        <button class="mini" id="testBoy">Test</button>
+      </div>
+      <div class="vrow">
+        <span class="vname g">Klinkaara</span>
+        <select id="girlVoice" aria-label="Voice for Klinkaara"></select>
+        <button class="mini" id="testGirl">Test</button>
+      </div>
+      <p class="hint" id="voiceHint">Offline voices are the steady ones. If a voice breaks up mid-sentence, pick another and press Test.</p>
+    </div>
+
+    <div class="card">
+      <h2 class="sectitle">All stops on the tour</h2>
+      <div class="list" id="chips"></div>
+      <p class="hint">Green chips are the lands and seas around India.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   PROJECTION  (longitude/latitude -> svg x/y)
+   ============================================================ */
+const X = lon => (lon - 66.5) * 26.5;
+const Y = lat => (38.5 - lat) * 27.5;
+const P  = (lon,lat) => [X(lon), Y(lat)];
+
+const SVGNS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs={}, parent=null) => {
+  const n = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(n);
+  return n;
+};
+
+/* ============================================================
+   DATA
+   ============================================================ */
+const STATES = [
+  {n:"Jammu & Kashmir", cap:"Srinagar", lon:74.80, lat:34.08, temple:"Vaishno Devi Temple", tcity:"Katra", fact:"Its Dal Lake has houseboats you can sleep in."},
+  {n:"Ladakh", cap:"Leh", lon:77.58, lat:34.16, temple:"Thiksey Monastery", tcity:"Thiksey", fact:"It is a cold desert — high, dry and full of stars."},
+  {n:"Himachal Pradesh", cap:"Shimla", lon:77.17, lat:31.10, temple:"Hidimba Devi Temple", tcity:"Manali", fact:"Apples grow on its hillsides by the truckload."},
+  {n:"Punjab", cap:"Chandigarh", lon:76.50, lat:30.60, temple:"Golden Temple (Harmandir Sahib)", tcity:"Amritsar", fact:"Its kitchen at the Golden Temple feeds thousands free every day."},
+  {n:"Haryana", cap:"Chandigarh", lon:76.95, lat:30.15, temple:"Brahma Sarovar", tcity:"Kurukshetra", fact:"The Bhagavad Gita was spoken here, at Kurukshetra."},
+  {n:"Uttarakhand", cap:"Dehradun", lon:78.03, lat:30.32, temple:"Kedarnath Temple", tcity:"Kedarnath", fact:"The river Ganga begins here, in the ice of Gaumukh."},
+  {n:"Delhi", cap:"New Delhi", lon:77.21, lat:28.61, temple:"Akshardham Temple", tcity:"New Delhi", fact:"It is India's capital — the President lives here."},
+  {n:"Rajasthan", cap:"Jaipur", lon:75.79, lat:26.91, temple:"Brahma Temple", tcity:"Pushkar", fact:"India's biggest state, with the golden Thar Desert."},
+  {n:"Uttar Pradesh", cap:"Lucknow", lon:80.95, lat:26.85, temple:"Kashi Vishwanath Temple", tcity:"Varanasi", fact:"Varanasi is one of the oldest living cities on Earth."},
+  {n:"Bihar", cap:"Patna", lon:85.13, lat:25.60, temple:"Mahabodhi Temple", tcity:"Bodh Gaya", fact:"Buddha found enlightenment under a tree here."},
+  {n:"Sikkim", cap:"Gangtok", lon:88.61, lat:27.33, temple:"Rumtek Monastery", tcity:"Rumtek", fact:"Kanchenjunga, the world's third-highest peak, guards it."},
+  {n:"Arunachal Pradesh", cap:"Itanagar", lon:93.60, lat:27.08, temple:"Tawang Monastery", tcity:"Tawang", fact:"India's sunrise arrives here first, every single day."},
+  {n:"Assam", cap:"Dispur", lon:91.79, lat:26.14, temple:"Kamakhya Temple", tcity:"Guwahati", fact:"Home of Assam tea and the one-horned rhino."},
+  {n:"Nagaland", cap:"Kohima", lon:94.11, lat:25.67, temple:"Kachari Ruins", tcity:"Dimapur", fact:"Its Hornbill Festival gathers many tribes to dance."},
+  {n:"Manipur", cap:"Imphal", lon:93.94, lat:24.82, temple:"Shree Govindajee Temple", tcity:"Imphal", fact:"Loktak Lake has floating islands of grass."},
+  {n:"Meghalaya", cap:"Shillong", lon:91.89, lat:25.58, temple:"Nartiang Durga Temple", tcity:"Nartiang", fact:"The rainiest place on Earth — with bridges made of living roots."},
+  {n:"Tripura", cap:"Agartala", lon:91.28, lat:23.83, temple:"Tripura Sundari Temple", tcity:"Udaipur", fact:"Its Ujjayanta Palace is now a museum."},
+  {n:"Mizoram", cap:"Aizawl", lon:92.72, lat:23.73, temple:"Solomon's Temple", tcity:"Aizawl", fact:"Bamboo forests cover most of these hills."},
+  {n:"West Bengal", cap:"Kolkata", lon:88.36, lat:22.57, temple:"Dakshineswar Kali Temple", tcity:"Kolkata", fact:"The Sundarbans mangroves here hide Royal Bengal tigers."},
+  {n:"Jharkhand", cap:"Ranchi", lon:85.31, lat:23.34, temple:"Baidyanath Dham", tcity:"Deoghar", fact:"Waterfalls and iron mines fill this forest state."},
+  {n:"Odisha", cap:"Bhubaneswar", lon:85.82, lat:20.27, temple:"Jagannath Temple", tcity:"Puri", fact:"Its Rath Yatra pulls giant wooden chariots through Puri."},
+  {n:"Chhattisgarh", cap:"Raipur", lon:81.63, lat:21.25, temple:"Danteshwari Temple", tcity:"Dantewada", fact:"Chitrakote Falls is called the Niagara of India."},
+  {n:"Madhya Pradesh", cap:"Bhopal", lon:77.41, lat:23.26, temple:"Mahakaleshwar Temple", tcity:"Ujjain", fact:"It sits in the very middle — the heart of India."},
+  {n:"Gujarat", cap:"Gandhinagar", lon:72.65, lat:23.22, temple:"Somnath Temple", tcity:"Somnath", fact:"The only place wild Asiatic lions still roam free."},
+  {n:"Maharashtra", cap:"Mumbai", lon:72.88, lat:19.08, temple:"Siddhivinayak Temple", tcity:"Mumbai", fact:"Mumbai makes more films than anywhere on Earth."},
+  {n:"Telangana", cap:"Hyderabad", lon:78.48, lat:17.38, temple:"Yadagirigutta Temple", tcity:"Yadadri", fact:"Hyderabad's Charminar has four tall towers."},
+  {n:"Goa", cap:"Panaji", lon:73.83, lat:15.49, temple:"Shri Mangeshi Temple", tcity:"Mangeshi", fact:"India's smallest state — all beaches and coconut palms."},
+  {n:"Andhra Pradesh", cap:"Amaravati", lon:80.51, lat:16.51, temple:"Tirumala Venkateswara Temple", tcity:"Tirupati", fact:"Tirupati is visited by more pilgrims than almost any temple on Earth."},
+  {n:"Karnataka", cap:"Bengaluru", lon:77.59, lat:12.97, temple:"Virupaksha Temple", tcity:"Hampi", fact:"Hampi is a whole city of stone carved long ago."},
+  {n:"Tamil Nadu", cap:"Chennai", lon:80.27, lat:13.08, temple:"Meenakshi Amman Temple", tcity:"Madurai", fact:"Its temple towers are painted in a thousand colours."},
+  {n:"Puducherry", cap:"Puducherry", lon:79.83, lat:11.93, temple:"Manakula Vinayagar Temple", tcity:"Puducherry", fact:"The streets here still carry French names."},
+  {n:"Kerala", cap:"Thiruvananthapuram", lon:76.94, lat:8.52, temple:"Padmanabhaswamy Temple", tcity:"Thiruvananthapuram", fact:"You can ride a houseboat through its backwaters."},
+  {n:"Andaman & Nicobar", cap:"Port Blair", lon:92.73, lat:11.62, temple:"Shiva Temple, Ross Island", tcity:"Port Blair", fact:"Hundreds of islands sitting far out in the sea."}
+];
+
+const NEIGHBOURS = [
+  {n:"Pakistan", lon:69.6, lat:30.2, rx:52, ry:78, cap:"Islamabad",
+   line:"India's neighbour to the north-west, across the Thar Desert."},
+  {n:"Afghanistan", lon:69.4, lat:35.6, rx:38, ry:34, cap:"Kabul",
+   line:"A mountain country touching India's far north-west corner."},
+  {n:"China", lon:84.0, lat:34.6, rx:120, ry:52, cap:"Beijing",
+   line:"India's biggest neighbour, on the far side of the Himalayas. Tibet lies here."},
+  {n:"Nepal", lon:84.0, lat:28.6, rx:56, ry:20, cap:"Kathmandu",
+   line:"Home of Mount Everest, the tallest mountain in the world."},
+  {n:"Bhutan", lon:90.4, lat:27.6, rx:28, ry:14, cap:"Thimphu",
+   line:"A small Himalayan kingdom that measures its people's happiness."},
+  {n:"Bangladesh", lon:90.2, lat:23.9, rx:32, ry:34, cap:"Dhaka",
+   line:"A land of great rivers, on India's eastern side."},
+  {n:"Myanmar", lon:96.3, lat:21.8, rx:36, ry:62, cap:"Naypyidaw",
+   line:"India's neighbour to the east, past the hills of Mizoram."},
+  {n:"Sri Lanka", lon:80.7, lat:7.7, rx:26, ry:46, cap:"Sri Jayawardenepura Kotte",
+   line:"An island just below India, shaped like a teardrop."}
+];
+
+const OCEANS = [
+  {key:"arabian", label:"ARABIAN SEA", lon:68.6, lat:15.5, rot:-72,
+   line:"The sea on India's western side. Mumbai, Goa and Kerala watch the sun set into it."},
+  {key:"bengal", label:"BAY OF BENGAL", lon:88.5, lat:14.5, rot:78,
+   line:"The bay on India's eastern side. Its storms bring the rains to Odisha and Bengal."},
+  {key:"indian", label:"INDIAN OCEAN", lon:74.0, lat:6.2, rot:0,
+   line:"The great ocean below India. It is the only ocean named after a country."}
+];
+
+/* India outline, going clockwise from Kashmir */
+const OUTLINE = [
+ [74.0,36.6],[75.6,35.6],[77.8,35.5],[78.9,34.4],[79.3,32.6],[79.1,31.0],[80.9,30.3],
+ [82.9,29.4],[85.0,28.1],[86.9,27.6],[88.2,27.2],[88.9,27.4],[89.7,26.7],[91.7,26.8],
+ [92.0,27.5],[94.2,27.6],[96.2,28.4],[97.3,28.0],[96.4,27.0],[95.2,26.6],[94.8,25.4],
+ [94.3,24.0],[93.4,23.2],[92.6,22.0],[92.2,23.4],[91.3,23.0],[91.6,24.2],[92.3,25.0],
+ [90.0,25.3],[89.0,26.0],[88.1,24.6],[88.0,23.2],[88.9,21.7],[87.0,21.5],[85.2,19.8],
+ [83.4,18.2],[81.2,16.4],[80.3,15.9],[80.2,13.6],[79.9,11.8],[79.3,10.3],[78.2,9.2],
+ [77.5,8.1],[76.6,9.4],[76.0,11.2],[74.9,13.4],[74.0,15.4],[73.1,17.9],[72.8,19.5],
+ [72.6,21.2],[71.9,21.4],[70.3,20.9],[69.2,22.3],[68.7,23.6],[70.4,23.9],[71.2,24.3],
+ [70.5,25.6],[70.0,26.6],[70.7,27.7],[72.4,28.4],[73.5,29.6],[74.5,31.0],[74.6,32.6],
+ [73.9,34.2],[74.0,36.6]
+];
+
+/* ============================================================
+   DRAW THE MAP
+   ============================================================ */
+function catmull(points, closed=true){
+  const p = points.map(([lo,la])=>P(lo,la));
+  let d = `M ${p[0][0].toFixed(1)} ${p[0][1].toFixed(1)}`;
+  const n = p.length;
+  for(let i=0;i<n-1;i++){
+    const p0 = p[i-1] || (closed ? p[n-2] : p[0]);
+    const p1 = p[i], p2 = p[i+1];
+    const p3 = p[i+2] || (closed ? p[1] : p2);
+    const c1 = [p1[0]+(p2[0]-p0[0])/6, p1[1]+(p2[1]-p0[1])/6];
+    const c2 = [p2[0]-(p3[0]-p1[0])/6, p2[1]-(p3[1]-p1[1])/6];
+    d += ` C ${c1[0].toFixed(1)} ${c1[1].toFixed(1)}, ${c2[0].toFixed(1)} ${c2[1].toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  return d + " Z";
+}
+
+/* waves */
+(function drawWaves(){
+  const g = document.getElementById("waves");
+  for(let i=0;i<34;i++){
+    const x = 20 + Math.random()*800, y = 20 + Math.random()*940;
+    el("path",{d:`M ${x} ${y} q 9 -6 18 0 q 9 6 18 0`,fill:"none",
+      stroke:"rgba(255,255,255,.10)",'stroke-width':3,'stroke-linecap':"round"},g);
+  }
+})();
+
+/* neighbours */
+(function drawNeighbours(){
+  const g = document.getElementById("neighbours");
+  NEIGHBOURS.forEach(nb=>{
+    const [x,y] = P(nb.lon, nb.lat);
+    const grp = el("g",{class:"neighbour",tabindex:"0",role:"button",
+      'aria-label':`${nb.n}, neighbouring country`},g);
+    el("ellipse",{cx:x,cy:y,rx:nb.rx,ry:nb.ry,fill:"#0e5468",
+      stroke:"rgba(255,255,255,.22)",'stroke-width':2,'stroke-dasharray':"7 6"},grp);
+    const t = el("text",{x:x,y:y+4,class:"nlabel",'text-anchor':"middle"},grp);
+    t.textContent = nb.n;
+    grp.addEventListener("click",()=>flyTo({kind:"neighbour",data:nb}));
+    grp.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();flyTo({kind:"neighbour",data:nb});}});
+  });
+})();
+
+/* Simplified state outlines. Shared border points use identical numbers so
+   neighbouring states meet cleanly. */
+const SHAPES = {
+"Jammu & Kashmir":[[74.0,36.6],[76.0,34.8],[77.0,33.0],[75.6,32.6],[74.6,32.6],[73.9,34.2]],
+"Ladakh":[[76.0,34.8],[77.8,35.5],[78.9,34.4],[79.3,32.6],[77.0,33.0]],
+"Himachal Pradesh":[[75.6,32.6],[77.0,33.0],[79.3,32.6],[79.0,31.6],[77.9,30.9],[76.6,30.9],[75.9,31.8]],
+"Punjab":[[74.4,32.0],[75.6,32.6],[75.9,31.8],[76.6,30.9],[76.6,30.4],[75.3,29.9],[73.9,30.2]],
+"Haryana":[[74.5,29.9],[75.3,29.9],[76.6,30.4],[77.6,30.4],[77.6,28.0],[76.9,27.6],[75.4,28.1],[74.5,29.2]],
+"Delhi":[[76.95,28.9],[77.4,28.9],[77.4,28.35],[76.95,28.35]],
+"Uttarakhand":[[77.9,30.9],[79.0,31.6],[81.0,30.3],[80.1,28.8],[78.3,29.6],[77.6,30.4]],
+"Uttar Pradesh":[[77.6,30.4],[78.3,29.6],[80.1,28.8],[84.0,27.4],[83.9,24.6],[83.2,24.2],[80.5,24.5],[78.3,25.4],[77.1,27.2],[77.6,28.0]],
+"Rajasthan":[[74.5,29.9],[75.4,28.1],[76.9,27.6],[77.1,27.2],[77.0,24.8],[74.5,24.2],[70.6,24.5],[70.0,26.6],[70.7,27.7],[72.4,28.4],[73.5,29.6]],
+"Gujarat":[[74.5,24.2],[74.2,22.0],[73.9,20.9],[72.9,20.1],[72.6,21.2],[71.9,21.4],[70.3,20.9],[69.2,22.3],[68.7,23.6],[70.4,23.9],[71.2,24.3],[70.6,24.5]],
+"Madhya Pradesh":[[74.5,24.2],[77.0,24.8],[78.3,25.4],[80.5,24.5],[81.7,23.9],[81.6,22.5],[80.6,21.6],[76.0,21.4],[74.1,21.9],[74.2,22.0]],
+"Chhattisgarh":[[81.7,23.9],[83.9,24.1],[84.0,22.0],[83.0,19.9],[81.3,17.8],[80.2,19.6],[80.6,21.6],[81.6,22.5]],
+"Maharashtra":[[74.1,21.9],[76.0,21.4],[80.6,21.6],[80.2,19.6],[77.6,18.4],[76.9,17.4],[74.8,16.0],[73.7,15.9],[73.6,16.5],[73.1,17.9],[72.8,19.5],[72.9,20.1],[73.9,20.9]],
+"Goa":[[73.7,15.9],[74.3,15.6],[74.1,14.9],[73.9,14.85]],
+"Karnataka":[[76.9,17.4],[77.7,16.4],[78.6,15.3],[78.4,13.9],[77.6,12.6],[76.3,11.9],[74.9,12.8],[74.3,14.6],[74.3,15.6],[74.8,16.0]],
+"Telangana":[[80.2,19.6],[81.3,17.8],[80.4,16.9],[79.3,16.0],[77.7,16.4],[77.6,18.4]],
+"Andhra Pradesh":[[78.6,15.3],[77.7,16.4],[79.3,16.0],[80.4,16.9],[81.3,17.8],[83.4,18.5],[84.8,19.1],[83.4,18.2],[81.2,16.4],[80.3,15.9],[80.2,13.6],[78.4,13.9]],
+"Tamil Nadu":[[76.3,11.9],[77.6,12.6],[78.4,13.9],[80.2,13.6],[79.9,11.8],[79.3,10.3],[78.2,9.2],[77.5,8.1],[77.2,9.2],[76.9,11.0]],
+"Puducherry":[[79.72,12.05],[79.92,12.05],[79.92,11.83],[79.72,11.83]],
+"Kerala":[[74.9,12.8],[76.3,11.9],[76.9,11.0],[77.2,9.2],[77.5,8.1],[76.6,9.4],[76.0,11.2]],
+"Odisha":[[83.0,19.9],[83.4,18.5],[84.8,19.1],[85.2,19.8],[87.0,21.5],[87.3,22.0],[85.0,22.3],[84.0,22.0]],
+"Jharkhand":[[83.9,24.6],[87.9,24.5],[87.3,22.0],[85.0,22.3],[84.0,22.0],[83.9,24.1]],
+"Bihar":[[83.9,24.6],[84.0,27.4],[88.1,26.6],[87.9,24.5]],
+"West Bengal":[[88.1,27.2],[89.0,26.9],[89.5,26.3],[88.4,25.2],[88.1,24.6],[88.0,23.2],[88.9,21.7],[87.0,21.5],[87.3,22.0],[87.9,24.5],[88.1,26.6]],
+"Sikkim":[[88.0,27.5],[88.9,27.4],[88.9,27.0],[88.1,27.2]],
+"Assam":[[89.9,26.0],[92.0,26.9],[94.2,27.6],[95.3,27.0],[94.6,26.4],[94.2,26.6],[93.9,25.2],[93.5,25.3],[93.2,24.3],[92.5,24.2],[92.3,24.9],[92.3,25.9],[89.9,25.9]],
+"Meghalaya":[[89.9,25.9],[92.3,25.9],[92.3,25.0],[90.9,25.0],[89.9,25.2]],
+"Arunachal Pradesh":[[91.7,27.0],[92.0,27.5],[94.2,28.0],[96.2,28.4],[97.3,28.0],[96.4,27.0],[95.3,27.0],[94.2,27.6],[92.0,26.9]],
+"Nagaland":[[94.2,26.6],[95.2,26.8],[95.2,25.2],[93.9,25.2]],
+"Manipur":[[93.5,25.3],[94.5,25.2],[94.6,23.9],[93.4,23.9]],
+"Mizoram":[[92.3,24.5],[93.3,24.0],[93.3,22.0],[92.4,22.0]],
+"Tripura":[[91.2,24.3],[92.3,24.3],[92.3,23.0],[91.2,23.2]]
+};
+
+/* Major rivers — each is a course from source towards the sea. */
+const RIVERS = [
+ {n:"Indus",     lbl:[77.0,34.6], pts:[[80.2,32.6],[79.0,33.2],[77.6,34.1],[76.2,34.9],[74.3,35.3]]},
+ {n:"Sutlej",    lbl:[76.6,31.5], pts:[[79.0,31.6],[77.8,31.4],[76.4,31.2],[75.0,31.0],[73.9,30.4]]},
+ {n:"Ganga",     lbl:[84.2,25.9], pts:[[79.0,30.9],[78.2,29.95],[79.4,28.0],[80.4,26.5],[81.9,25.45],[83.0,25.3],[85.1,25.6],[87.0,25.2],[87.9,24.8],[88.1,23.4],[88.1,21.9]]},
+ {n:"Yamuna",    lbl:[78.6,27.6], pts:[[78.4,31.0],[77.5,30.2],[77.2,28.6],[78.0,27.2],[79.9,26.1],[81.9,25.45]]},
+ {n:"Brahmaputra",lbl:[92.2,26.9],pts:[[95.6,28.1],[94.6,27.6],[93.4,26.9],[92.0,26.4],[90.7,26.1],[89.9,25.6],[90.3,24.2]]},
+ {n:"Narmada",   lbl:[76.6,22.4], pts:[[81.7,22.7],[79.6,22.8],[77.4,22.7],[75.2,22.2],[73.6,21.8],[72.7,21.7]]},
+ {n:"Tapti",     lbl:[75.4,21.0], pts:[[78.3,21.6],[76.3,21.3],[74.4,21.2],[72.9,21.1]]},
+ {n:"Mahanadi",  lbl:[84.3,20.4], pts:[[81.4,20.4],[82.8,20.9],[84.4,20.7],[85.8,20.4],[86.7,20.3]]},
+ {n:"Godavari",  lbl:[79.0,18.3], pts:[[73.5,19.9],[75.6,19.5],[77.8,19.0],[79.6,18.4],[81.0,17.4],[82.3,16.9]]},
+ {n:"Krishna",   lbl:[78.2,16.2], pts:[[73.8,17.9],[75.6,16.9],[77.6,16.5],[79.4,16.4],[80.9,16.0]]},
+ {n:"Kaveri",    lbl:[78.2,11.2], pts:[[75.8,12.4],[77.0,12.2],[78.2,11.5],[79.3,11.0],[79.8,11.2]]}
+];
+
+const STATE_TINTS = ["#ffd166","#8ce99a","#a5d8ff","#ffb3c7","#d0bfff","#ffec99",
+                     "#7fe3e8","#fcc2d7","#b2f2bb","#bac8ff","#ffcd9b","#eebefa",
+                     "#c0eb75","#99e9f2","#ffa8a8"];
+
+const polyNodes = {};
+
+(function drawLand(){
+  const g = document.getElementById("landLayer");
+
+  /* base landmass, so any hairline gap between states still reads as land */
+  el("path",{d:catmull(OUTLINE),fill:"url(#landGrad)",stroke:"#1f5a75",
+    'stroke-width':3.5,'stroke-linejoin':"round",filter:"url(#soft)"},g);
+
+  /* each state, with its own border */
+  const sg = el("g",{id:"states"},g);
+  Object.keys(SHAPES).forEach((name,i)=>{
+    const pts = SHAPES[name].map(([lo,la])=>P(lo,la));
+    const d = "M " + pts.map(p=>`${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" L ") + " Z";
+    const st = STATES.find(s=>s.n===name);
+    const grp = el("g",{class:"state",tabindex:"0",role:"button",'aria-label':name},sg);
+    el("path",{d:d,fill:STATE_TINTS[i%STATE_TINTS.length],stroke:"#2c5f7a",
+      'stroke-width':1.8,'stroke-linejoin':"round"},grp);
+    polyNodes[name]=grp;
+    if(st){
+      grp.addEventListener("click",()=>flyTo({kind:"state",data:st}));
+      grp.addEventListener("keydown",e=>{
+        if(e.key==="Enter"||e.key===" "){e.preventDefault();flyTo({kind:"state",data:st});}
+      });
+    }
+    /* name the states big enough to hold a label */
+    const xs = pts.map(p=>p[0]), ys = pts.map(p=>p[1]);
+    const w = Math.max(...xs)-Math.min(...xs), h = Math.max(...ys)-Math.min(...ys);
+    if(w>62 && h>52){
+      const cx = xs.reduce((a,b)=>a+b,0)/xs.length;
+      const cy = ys.reduce((a,b)=>a+b,0)/ys.length;
+      const t = el("text",{x:cx.toFixed(1),y:cy.toFixed(1),class:"stlabel",'text-anchor':"middle"},sg);
+      t.textContent = name;
+    }
+  });
+
+  /* rivers on top of the states */
+  const rg = el("g",{id:"rivers"},g);
+  RIVERS.forEach(r=>{
+    const d = catmull(r.pts,false).replace(/ Z$/,"");
+    el("path",{d:d,fill:"none",stroke:"#0d6d8a",'stroke-width':4.6,
+      'stroke-linecap':"round",opacity:.35},rg);
+    el("path",{d:d,fill:"none",stroke:"#2fb6d8",'stroke-width':2.6,
+      'stroke-linecap':"round"},rg);
+    const [lx,ly] = P(r.lbl[0],r.lbl[1]);
+    const t = el("text",{x:lx.toFixed(1),y:ly.toFixed(1),class:"rivlabel",'text-anchor':"middle"},rg);
+    t.textContent = r.n;
+  });
+})();
+
+/* himalayas + kailash */
+(function drawHimalaya(){
+  const g = document.getElementById("himalaya");
+  const ridge = [[73.9,34.6],[76.5,34.2],[79.0,32.4],[81.5,30.8],[84.0,29.3],[86.5,28.3],[88.6,28.0],[91.0,28.3],[93.5,28.4],[95.8,28.6]];
+  // clickable ridge band
+  const band = el("g",{class:"peak",tabindex:"0",role:"button",'aria-label':"The Himalayas"},g);
+  ridge.forEach((pt,i)=>{
+    if(i===ridge.length-1) return;
+    const [x1,y1] = P(pt[0],pt[1]);
+    const [x2,y2] = P(ridge[i+1][0],ridge[i+1][1]);
+    for(let k=0;k<3;k++){
+      const t=(k+.5)/3;
+      const cx = x1+(x2-x1)*t, cy = y1+(y2-y1)*t;
+      const h = 20 + Math.random()*12, w = 17;
+      el("path",{d:`M ${cx-w} ${cy+6} L ${cx} ${cy-h} L ${cx+w} ${cy+6} Z`,
+        fill:"#96aec4",stroke:"#5d738b",'stroke-width':1.5,'stroke-linejoin':"round"},band);
+      el("path",{d:`M ${cx-6.5} ${cy-h+9} L ${cx} ${cy-h} L ${cx+6.5} ${cy-h+9} L ${cx+2} ${cy-h+6} L ${cx-2.5} ${cy-h+10} Z`,
+        fill:"#fff"},band);
+    }
+  });
+  const [hx,hy] = P(85.5,30.4);
+  const ht = el("text",{x:hx,y:hy,class:"kailashlabel",'text-anchor':"middle",
+    transform:`rotate(-9 ${hx} ${hy})`},band);
+  ht.textContent = "H I M A L A Y A S";
+  band.addEventListener("click",()=>flyTo({kind:"himalaya"}));
+  band.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();flyTo({kind:"himalaya"});}});
+
+  // Mount Kailash — Tibet, 31.07N 81.31E
+  const [kx,ky] = P(81.31,31.07);
+  const kg = el("g",{class:"peak",id:"kailashNode",tabindex:"0",role:"button",'aria-label':"Mount Kailash"},g);
+  el("path",{d:`M ${kx-30} ${ky+12} L ${kx} ${ky-42} L ${kx+30} ${ky+12} Z`,
+    fill:"#cfe0ee",stroke:"#4a6b8a",'stroke-width':2.5,'stroke-linejoin':"round"},kg);
+  el("path",{d:`M ${kx-13} ${ky-19} L ${kx} ${ky-42} L ${kx+13} ${ky-19} L ${kx+5} ${ky-24} L ${kx-4} ${ky-16} Z`,fill:"#fff"},kg);
+  el("circle",{cx:kx,cy:ky-52,r:6,fill:"#ffd76e",filter:"url(#glow)"},kg);
+  const kt = el("text",{x:kx,y:ky+30,class:"kailashlabel",'text-anchor':"middle"},kg);
+  kt.textContent = "Mt. Kailash";
+  kg.addEventListener("click",()=>flyTo({kind:"kailash"}));
+  kg.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();flyTo({kind:"kailash"});}});
+})();
+
+/* oceans */
+(function drawOceans(){
+  const g = document.getElementById("oceans");
+  OCEANS.forEach(o=>{
+    const [x,y] = P(o.lon,o.lat);
+    const grp = el("g",{class:"neighbour",tabindex:"0",role:"button",'aria-label':o.label},g);
+    const t = el("text",{x:x,y:y,class:"oceanlabel",'text-anchor':"middle",
+      transform:`rotate(${o.rot} ${x} ${y})`},grp);
+    t.textContent = o.label;
+    el("rect",{x:x-95,y:y-70,width:190,height:140,fill:"transparent"},grp);
+    grp.addEventListener("click",()=>flyTo({kind:"ocean",data:o}));
+    grp.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();flyTo({kind:"ocean",data:o});}});
+  });
+})();
+
+/* islands */
+(function drawIslands(){
+  const g = document.getElementById("islands");
+  const isl = [[92.75,13.4,4],[92.85,12.5,5],[92.73,11.6,6],[93.0,10.5,4],[93.6,8.0,4],[93.4,7.2,3],
+               [72.6,11.2,3],[72.9,10.6,3],[73.6,10.1,3]];
+  isl.forEach(([lo,la,r])=>{
+    const [x,y]=P(lo,la);
+    el("ellipse",{cx:x,cy:y,rx:r+2,ry:r,fill:"url(#landGrad)",stroke:"#1f5a75",'stroke-width':1.5},g);
+  });
+  const [sx,sy]=P(80.7,7.8);
+  el("path",{d:`M ${sx} ${sy-52} q 26 22 22 52 q -4 30 -22 44 q -20 -14 -24 -44 q -4 -30 24 -52 Z`,
+    fill:"#3f8f5e",stroke:"#245b3a",'stroke-width':2},g);
+})();
+
+/* state markers */
+const markerLayer = document.getElementById("markers");
+const nodes = {};
+STATES.forEach((s,i)=>{
+  const [x,y] = P(s.lon,s.lat);
+  s.x=x; s.y=y;
+  const grp = el("g",{class:"marker",tabindex:"0",role:"button",
+    'aria-label':`${s.n}, capital ${s.cap}`},markerLayer);
+  el("circle",{class:"hit",cx:x,cy:y,r:17},grp);
+  el("circle",{cx:x,cy:y,r:8.5,fill:"#fff",opacity:.75},grp);
+  el("circle",{class:"dot",cx:x,cy:y,r:5.5,fill:"#ff7a18",stroke:"#8a3b00",'stroke-width':1.4},grp);
+  grp.addEventListener("click",()=>flyTo({kind:"state",data:s}));
+  grp.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();flyTo({kind:"state",data:s});}});
+  nodes[s.n]=grp;
+});
+
+/* ============================================================
+   PLANE, RUNWAY, KIDS  (map layer)
+   ============================================================ */
+const planeLayer  = document.getElementById("plane");
+const groundLayer = document.getElementById("ground");
+const trailLayer  = document.getElementById("trail");
+
+const planeG = el("g",{id:"planeG"},planeLayer);
+const planeBody = el("g",{},planeG);
+el("path",{d:"M 26 0 L 4 7 L -14 7 L -20 2 L -6 0 L -20 -2 L -14 -7 L 4 -7 Z",
+  fill:"#ffffff",stroke:"#123a52",'stroke-width':2,'stroke-linejoin':"round"},planeBody);
+el("path",{d:"M 2 0 L -10 -22 L -2 -22 L 12 0 Z",fill:"#ff7a18",stroke:"#123a52",'stroke-width':2,'stroke-linejoin':"round"},planeBody);
+el("path",{d:"M 2 0 L -10 22 L -2 22 L 12 0 Z",fill:"#ff7a18",stroke:"#123a52",'stroke-width':2,'stroke-linejoin':"round"},planeBody);
+el("path",{d:"M -14 0 L -22 -10 L -17 -10 L -11 0 Z",fill:"#1f9254",stroke:"#123a52",'stroke-width':1.6},planeBody);
+el("circle",{cx:12,cy:0,r:3,fill:"#8fd3e8",stroke:"#123a52",'stroke-width':1.4},planeBody);
+
+let plane = {x:X(77.2), y:Y(28.6), a:0};
+const setPlane = () => planeG.setAttribute("transform",
+  `translate(${plane.x.toFixed(1)},${plane.y.toFixed(1)}) rotate(${plane.a.toFixed(1)}) scale(1.15)`);
+setPlane();
+
+function kidSvgOnMap(kind,x,y){
+  const g = el("g",{},groundLayer);
+  const skin="#c98a5b", shirt = kind==="boy" ? "#2f7fd6" : "#e0479b";
+  el("ellipse",{cx:x,cy:y+15,rx:11,ry:3.5,fill:"rgba(0,0,0,.22)"},g);
+  el("rect",{x:x-7,y:y-2,width:14,height:16,rx:5,fill:shirt},g);
+  el("circle",{cx:x,cy:y-9,r:7.5,fill:skin,stroke:"#7a4a26",'stroke-width':1.2},g);
+  if(kind==="girl"){
+    el("path",{d:`M ${x-8} ${y-9} q 0 -12 8 -12 q 8 0 8 12 q -3 -6 -8 -6 q -5 0 -8 6 Z`,fill:"#3a2418"},g);
+    el("circle",{cx:x+8,cy:y-12,r:2.6,fill:"#ffd76e"},g);
+  } else {
+    el("path",{d:`M ${x-8} ${y-11} q 2 -9 8 -9 q 6 0 8 9 q -8 -4 -16 0 Z`,fill:"#2b1b12"},g);
+  }
+  el("circle",{cx:x-2.6,cy:y-9.5,r:1.1,fill:"#12263f"},g);
+  el("circle",{cx:x+2.6,cy:y-9.5,r:1.1,fill:"#12263f"},g);
+  g.style.opacity = 0;
+  g.style.transform = "translateY(10px)";
+  g.style.transition = "opacity .35s ease, transform .45s cubic-bezier(.2,1.5,.4,1)";
+  requestAnimationFrame(()=>{ g.style.opacity=1; g.style.transform="none"; });
+  return g;
+}
+
+function clearGround(){
+  groundLayer.replaceChildren();
+  trailLayer.replaceChildren();
+  speechLayer.replaceChildren();
+  hideTalk();
+  zoomWhole();
+  document.querySelectorAll(".marker.active").forEach(m=>m.classList.remove("active"));
+  document.querySelectorAll(".state.active").forEach(m=>m.classList.remove("active"));
+}
+
+/* ============================================================
+   FLIGHT
+   ============================================================ */
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let flying = false;
+
+function flightTarget(t){
+  if(t.kind==="state")     return [t.data.x, t.data.y];
+  if(t.kind==="neighbour") return P(t.data.lon, t.data.lat);
+  if(t.kind==="ocean")     return P(t.data.lon, t.data.lat);
+  if(t.kind==="kailash")   return P(81.31, 31.07 - 0.55);
+  if(t.kind==="himalaya")  return P(85.5, 30.4 - 0.5);
+  return [plane.x, plane.y];
+}
+
+function flyTo(target){
+  if(flying) return;
+  flying = true;
+  clearGround();
+  stopSpeech();
+  if(target.kind==="state"){
+    nodes[target.data.n]?.classList.add("active");
+    polyNodes[target.data.n]?.classList.add("active");
+  }
+
+  const [tx,ty] = flightTarget(target);
+  const [sx,sy] = [plane.x, plane.y];
+  const dist = Math.hypot(tx-sx, ty-sy);
+  setStatus(dist < 2 ? "Circling…" : "Taking off…");
+
+  // control point: bow the arc sideways so it reads as a real flight path
+  const mx = (sx+tx)/2, my = (sy+ty)/2;
+  const nx = -(ty-sy), ny = (tx-sx);
+  const len = Math.hypot(nx,ny) || 1;
+  const bow = Math.min(140, dist*0.32);
+  const cx = mx + (nx/len)*bow, cy = my + (ny/len)*bow;
+
+  const trail = el("path",{fill:"none",stroke:"#ffe9b8",'stroke-width':2.5,
+    'stroke-dasharray':"7 9",'stroke-linecap':"round",opacity:.85},trailLayer);
+
+  const dur = reduceMotion ? 250 : Math.min(2400, 700 + dist*2.2);
+  const t0 = performance.now();
+
+  const B  = (t,a,b,c)=> (1-t)*(1-t)*a + 2*(1-t)*t*b + t*t*c;
+  const dB = (t,a,b,c)=> 2*(1-t)*(b-a) + 2*t*(c-b);
+
+  function frame(now){
+    let t = Math.min(1,(now-t0)/dur);
+    const e = t<.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;   // ease in-out
+    plane.x = B(e,sx,cx,tx);
+    plane.y = B(e,sy,cy,ty);
+    const vx = dB(e,sx,cx,tx), vy = dB(e,sy,cy,ty);
+    if(Math.hypot(vx,vy) > .01) plane.a = Math.atan2(vy,vx)*180/Math.PI;
+    setPlane();
+
+    // draw the trail behind it
+    let d = `M ${sx} ${sy}`;
+    for(let k=1;k<=24;k++){
+      const s = (k/24)*e;
+      d += ` L ${B(s,sx,cx,tx).toFixed(1)} ${B(s,sy,cy,ty).toFixed(1)}`;
+    }
+    trail.setAttribute("d",d);
+
+    if(t<1){ requestAnimationFrame(frame); }
+    else { land(target,tx,ty); }
+  }
+  requestAnimationFrame(frame);
+}
+
+function land(target,tx,ty){
+  setStatus("Landing…");
+  planeG.style.transition = reduceMotion ? "none" : "transform .45s cubic-bezier(.3,1.4,.4,1)";
+  planeG.setAttribute("transform",
+    `translate(${tx.toFixed(1)},${ty.toFixed(1)}) rotate(${plane.a.toFixed(1)}) scale(.85)`);
+
+  // little dust puff
+  if(!reduceMotion){
+    for(let i=0;i<5;i++){
+      const c = el("circle",{cx:tx,cy:ty+8,r:2+Math.random()*3,fill:"rgba(255,255,255,.6)"},groundLayer);
+      c.style.transition = "transform .6s ease-out, opacity .6s ease-out";
+      const dx=(Math.random()-.5)*40, dy=-8-Math.random()*14;
+      requestAnimationFrame(()=>{ c.style.transform=`translate(${dx}px,${dy}px)`; c.style.opacity=0; });
+    }
+  }
+
+  setTimeout(()=>{
+    landAt = {x:tx, y:ty};
+    kidSvgOnMap("boy",  tx-22, ty+16);
+    kidSvgOnMap("girl", tx+22, ty+16);
+    zoomBox = zoomToPoint(tx, ty, target.kind==="state" ? 330 : 430);
+    const info = buildInfo(target);
+    renderInfo(info);
+    setStatus(`Landed at ${info.name}.`);
+    setTimeout(()=>speak(info), reduceMotion ? 0 : 620);
+    flying = false;
+    planeG.style.transition = "";
+  }, reduceMotion ? 0 : 380);
+}
+
+function setStatus(s){ document.getElementById("status").textContent = s; }
+
+/* ============================================================
+   WHAT THE KIDS SAY
+   ============================================================ */
+function buildInfo(target){
+  if(target.kind==="state"){
+    const s = target.data;
+    return {
+      name: s.n, eyebrow:"State of India",
+      facts:[
+        {icon:"pin",   label:"Capital city", value:s.cap},
+        {icon:"temple",label:"Famous temple", value:`${s.temple}, ${s.tcity}`}
+      ],
+      lines:[
+        {who:"Jaisvik", text:`We have landed in ${s.n}! Its capital city is ${s.cap} — that is where the state is governed from.`},
+        {who:"Klinkaara",text:`Come and see the ${s.temple} in ${s.tcity}. It is the most famous temple of ${s.n}.`},
+        {who:"Jaisvik", text:`One more thing: ${s.fact}`}
+      ]
+    };
+  }
+  if(target.kind==="neighbour"){
+    const nb = target.data;
+    return {
+      name: nb.n, eyebrow:"Neighbouring country",
+      facts:[{icon:"pin",label:"Capital city",value:nb.cap},{icon:"flag",label:"Shares a border with",value:"India"}],
+      lines:[
+        {who:"Jaisvik", text:`This is ${nb.n}, one of India's neighbours. Its capital is ${nb.cap}.`},
+        {who:"Klinkaara",text:nb.line}
+      ]
+    };
+  }
+  if(target.kind==="ocean"){
+    const o = target.data;
+    const title = o.label.split(" ").map(w=>w[0]+w.slice(1).toLowerCase()).join(" ");
+    return {
+      name:title, eyebrow:"Water around India",
+      facts:[{icon:"wave",label:"Type",value:o.key==="indian"?"Ocean":"Sea"},
+             {icon:"pin",label:"Side of India",value:o.key==="arabian"?"West":o.key==="bengal"?"East":"South"}],
+      lines:[
+        {who:"Klinkaara",text:`Look down — water everywhere! This is the ${title}.`},
+        {who:"Jaisvik", text:o.line},
+        {who:"Klinkaara",text:`India is touched by three waters: the Arabian Sea on the west, the Bay of Bengal on the east and the Indian Ocean at the bottom.`}
+      ]
+    };
+  }
+  if(target.kind==="himalaya"){
+    return {
+      name:"The Himalayas", eyebrow:"Mountains of the north",
+      facts:[{icon:"peak",label:"Meaning",value:"Him + alaya — the home of snow"},
+             {icon:"pin",label:"Runs through",value:"Kashmir to Arunachal Pradesh"}],
+      lines:[
+        {who:"Jaisvik", text:`These are the Himalayas — the tallest mountains in the world. Their name means 'the home of snow'.`},
+        {who:"Klinkaara",text:`They stand like a giant wall across the top of India, and they keep the cold winds out.`},
+        {who:"Jaisvik", text:`The Ganga, the Yamuna and the Brahmaputra are all born from their ice.`}
+      ]
+    };
+  }
+  return {
+    name:"Mount Kailash", eyebrow:"The sacred peak",
+    facts:[{icon:"peak",label:"Height",value:"About 6,638 metres"},
+           {icon:"pin",label:"Where",value:"Tibet, just beyond India's Himalayas"}],
+    lines:[
+      {who:"Klinkaara",text:`This shining peak is Mount Kailash. Many people believe Lord Shiva sits here with Goddess Parvati.`},
+      {who:"Jaisvik", text:`Nobody climbs it. Pilgrims walk all the way around it instead — that walk is called the parikrama.`},
+      {who:"Klinkaara",text:`Four great rivers begin near here, and beside it lies the blue Manasarovar lake.`}
+    ]
+  };
+}
+
+/* ============================================================
+   INFO CARD
+   ============================================================ */
+const ICONS = {
+  pin:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 22s7-6.4 7-12A7 7 0 0 0 5 10c0 5.6 7 12 7 12Z" fill="#ff7a18"/><circle cx="12" cy="10" r="2.7" fill="#fffaf0"/></svg>`,
+  temple:`<svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 1.5 15 5H9l3-3.5Z" fill="#ff7a18"/><path d="M6.5 8h11l1.5 3H5l1.5-3Z" fill="#e0a944"/><path d="M5 11h14v10H5V11Z" fill="#f3c66b"/><path d="M10 21v-5a2 2 0 0 1 4 0v5h-4Z" fill="#8a5c1c"/></svg>`,
+  peak:`<svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 3 22 20H2L12 3Z" fill="#96aec4"/><path d="M12 3 16 9.8 12 8l-4 1.8L12 3Z" fill="#fff"/></svg>`,
+  wave:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M2 9c3-3 5 3 8 0s5 3 8 0M2 15c3-3 5 3 8 0s5 3 8 0" stroke="#12869b" stroke-width="2.4" stroke-linecap="round"/></svg>`,
+  flag:`<svg width="20" height="20" viewBox="0 0 24 24"><rect x="4" y="3" width="2" height="18" rx="1" fill="#8a5c1c"/><path d="M7 4h12l-3 4 3 4H7V4Z" fill="#1f9254"/></svg>`
+};
+
+function kidPortrait(kind){
+  const shirt = kind==="boy" ? "#2f7fd6" : "#e0479b";
+  const hair = kind==="boy"
+    ? `<path d="M8 20 Q10 8 22 8 Q34 8 36 20 Q28 13 22 14 Q15 14 8 20Z" fill="#2b1b12"/>`
+    : `<path d="M7 26 Q7 6 22 6 Q37 6 37 26 Q33 16 22 16 Q11 16 7 26Z" fill="#3a2418"/><circle cx="35" cy="15" r="4" fill="#ffd76e"/>`;
+  return `<svg class="kid" viewBox="0 0 44 60" aria-hidden="true">
+    <rect x="10" y="32" width="24" height="26" rx="9" fill="${shirt}"/>
+    <circle cx="22" cy="20" r="13" fill="#c98a5b" stroke="#7a4a26" stroke-width="1.5"/>
+    ${hair}
+    <circle cx="17.5" cy="20" r="1.8" fill="#12263f"/><circle cx="26.5" cy="20" r="1.8" fill="#12263f"/>
+    <path d="M18 25.5 q4 3.2 8 0" stroke="#7a4a26" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function renderInfo(info){
+  const c = document.getElementById("infoCard");
+  c.innerHTML = `
+    <div class="guides">
+      <span>${kidPortrait("boy")}Jaisvik</span>
+      <span>${kidPortrait("girl")}Klinkaara</span>
+    </div>
+    <p class="place-eyebrow">${info.eyebrow}</p>
+    <h2 class="place-name">${info.name}</h2>
+    <div class="facts">
+      ${info.facts.map(f=>`<div class="fact">${ICONS[f.icon]}<div><b>${f.label}</b><span>${f.value}</span></div></div>`).join("")}
+    </div>
+    <div class="soundrow">
+      <button class="replay" id="replayBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M4 9h4l5-4v14l-5-4H4V9Z"/><path d="M16 8.5a5 5 0 0 1 0 7" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        Say it again
+      </button>
+      <label class="speed">Speed
+        <input type="range" id="speedRange" min="0.6" max="1.2" step="0.05" value="${speechRate}">
+      </label>
+    </div>
+    ${synth ? "" : `<p class="notice">This browser cannot speak out loud. Open the file in Chrome or Safari to hear Jaisvik and Klinkaara.</p>`}`;
+
+  currentInfo = info;
+  const rb = document.getElementById("replayBtn");
+  if(rb) rb.onclick = ()=>{ primeAudio(); speak(currentInfo); };
+  const sr = document.getElementById("speedRange");
+  if(sr) sr.oninput = e => { speechRate = parseFloat(e.target.value); };
+}
+
+/* ============================================================
+   ZOOM — the map comes closer while the guides talk
+   ============================================================ */
+const mapSvg  = document.getElementById("map");
+const FULL    = {x:0,y:0,w:850,h:985};
+let viewNow   = {...FULL};
+let zoomBox   = {...FULL};
+let viewRaf   = null;
+
+function applyView(v){
+  mapSvg.setAttribute("viewBox",
+    `${v.x.toFixed(1)} ${v.y.toFixed(1)} ${v.w.toFixed(1)} ${v.h.toFixed(1)}`);
+}
+function animateView(goal,dur=680){
+  cancelAnimationFrame(viewRaf);
+  if(reduceMotion){ viewNow={...goal}; applyView(viewNow); return; }
+  const from={...viewNow}, t0=performance.now();
+  const step = now=>{
+    const t = Math.min(1,(now-t0)/dur);
+    const e = 1-Math.pow(1-t,3);
+    viewNow = {
+      x: from.x+(goal.x-from.x)*e, y: from.y+(goal.y-from.y)*e,
+      w: from.w+(goal.w-from.w)*e, h: from.h+(goal.h-from.h)*e
+    };
+    applyView(viewNow);
+    if(t<1) viewRaf = requestAnimationFrame(step);
+  };
+  viewRaf = requestAnimationFrame(step);
+}
+function zoomToPoint(tx,ty,w){
+  const h = w*FULL.h/FULL.w;
+  let x = tx - w/2, y = ty - h*0.40;
+  x = Math.max(-30, Math.min(FULL.w-w+30, x));
+  y = Math.max(-30, Math.min(FULL.h-h+30, y));
+  const box = {x,y,w,h};
+  animateView(box);
+  return box;
+}
+function zoomWhole(){
+  zoomBox = {...FULL};
+  animateView(FULL,600);
+}
+
+/* ============================================================
+   THE GUIDES TALK — over the map, not inside it, so zooming and
+   panning never move the words or hide the map behind them.
+   ============================================================ */
+const speechLayer = document.getElementById("speech");
+const talkBox     = document.getElementById("mapTalk");
+let landAt = {x:X(77.2), y:Y(28.6)};
+
+function showMapBubble(line, idx, total){
+  if(!line){ talkBox.hidden = true; return; }
+  const isGirl = line.who === "Klinkaara";
+  talkBox.className = "maptalk" + (isGirl ? " g" : "");
+  talkBox.innerHTML = `<b>${line.who}</b>${line.text}` +
+    (total>1 ? `<span class="tick">${idx+1} of ${total}</span>` : "");
+  talkBox.hidden = false;
+  /* restart the entry animation */
+  talkBox.style.animation = "none";
+  void talkBox.offsetWidth;
+  talkBox.style.animation = "";
+}
+function hideTalk(){ talkBox.hidden = true; }
+
+/* ---- pinch, drag and wheel ---- */
+function clampView(v){
+  const w = Math.max(180, Math.min(FULL.w*1.15, v.w));
+  const h = w*FULL.h/FULL.w;
+  return {
+    w, h,
+    x: Math.max(-60, Math.min(FULL.w - w + 60, v.x)),
+    y: Math.max(-60, Math.min(FULL.h - h + 60, v.y))
+  };
+}
+function zoomBy(factor, cx, cy){
+  cancelAnimationFrame(viewRaf);
+  const w = viewNow.w / factor;
+  const h = w*FULL.h/FULL.w;
+  /* keep the point under the fingers still */
+  const px = cx===undefined ? viewNow.x + viewNow.w/2 : cx;
+  const py = cy===undefined ? viewNow.y + viewNow.h/2 : cy;
+  const rx = (px - viewNow.x)/viewNow.w, ry = (py - viewNow.y)/viewNow.h;
+  viewNow = clampView({x: px - rx*w, y: py - ry*h, w, h});
+  zoomBox = {...viewNow};
+  applyView(viewNow);
+}
+function svgPoint(clientX, clientY){
+  const r = mapSvg.getBoundingClientRect();
+  return {
+    x: viewNow.x + (clientX - r.left)/r.width  * viewNow.w,
+    y: viewNow.y + (clientY - r.top )/r.height * viewNow.h
+  };
+}
+
+(function gestures(){
+  let mode = null, startDist = 0, startView = null, startMid = null;
+  let startClient = null;
+
+  const rect = () => mapSvg.getBoundingClientRect();
+
+  mapSvg.addEventListener("touchstart", e=>{
+    cancelAnimationFrame(viewRaf);
+    if(e.touches.length === 2){
+      mode = "pinch";
+      const [a,b] = e.touches;
+      startDist = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY) || 1;
+      startView = {...viewNow};
+      startMid  = svgPoint((a.clientX+b.clientX)/2, (a.clientY+b.clientY)/2);
+    } else if(e.touches.length === 1){
+      mode = "drag";
+      startView = {...viewNow};
+      startClient = {x:e.touches[0].clientX, y:e.touches[0].clientY};
+    }
+  }, {passive:true});
+
+  mapSvg.addEventListener("touchmove", e=>{
+    if(mode === "pinch" && e.touches.length === 2){
+      e.preventDefault();
+      const [a,b] = e.touches;
+      const dist = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY) || 1;
+      const w = startView.w * (startDist/dist);
+      const h = w*FULL.h/FULL.w;
+      const rx = (startMid.x-startView.x)/startView.w;
+      const ry = (startMid.y-startView.y)/startView.h;
+      viewNow = clampView({x:startMid.x - rx*w, y:startMid.y - ry*h, w, h});
+      zoomBox = {...viewNow};
+      applyView(viewNow);
+    } else if(mode === "drag" && e.touches.length === 1 && startView.w < FULL.w - 5){
+      const r = rect();
+      const dx = (e.touches[0].clientX - startClient.x)/r.width  * startView.w;
+      const dy = (e.touches[0].clientY - startClient.y)/r.height * startView.h;
+      if(Math.abs(dx)+Math.abs(dy) > 3) e.preventDefault();
+      viewNow = clampView({x:startView.x - dx, y:startView.y - dy, w:startView.w, h:startView.h});
+      zoomBox = {...viewNow};
+      applyView(viewNow);
+    }
+  }, {passive:false});
+
+  const endTouch = ()=>{ mode = null; startClient = null; };
+  mapSvg.addEventListener("touchend", endTouch, {passive:true});
+  mapSvg.addEventListener("touchcancel", endTouch, {passive:true});
+
+  mapSvg.addEventListener("wheel", e=>{
+    e.preventDefault();
+    const p = svgPoint(e.clientX, e.clientY);
+    zoomBy(e.deltaY < 0 ? 1.18 : 1/1.18, p.x, p.y);
+  }, {passive:false});
+})();
+
+/* ============================================================
+   VOICES
+   ============================================================ */
+const synth = window.speechSynthesis;
+let voiceOn = true;
+let speechRate = 0.9;
+let primed = false;
+let currentInfo = null;
+let explainToken = 0;
+let pauseTimer = null;
+
+function primeAudio(){
+  if(primed || !synth) return;
+  try{
+    const u = new SpeechSynthesisUtterance(" ");
+    u.volume = 0;
+    synth.speak(u);
+    primed = true;
+  }catch(e){}
+}
+["pointerdown","keydown","touchstart"].forEach(ev=>
+  document.addEventListener(ev, primeAudio, {once:true, passive:true}));
+
+function stopSpeech(){
+  explainToken++;
+  clearTimeout(pauseTimer);
+  try{ synth && synth.cancel(); }catch(e){}
+}
+
+/* --- Voice selection -------------------------------------------------------
+   Network voices (Google's cloud voices) are the usual reason a voice breaks
+   up halfway through a sentence: the audio is streamed and any hiccup cuts it
+   off. Offline voices are far steadier, so they win by default. */
+let voiceList = [];
+let boyURI = null, girlURI = null;
+
+function scoreVoice(v, kind){
+  let s = 0;
+  if(v.localService) s += 100;                       // offline: the big one
+  if(/en[-_]IN/i.test(v.lang)) s += 40;              // Indian English
+  else if(/en[-_]GB/i.test(v.lang)) s += 12;
+  const female = /female|meera|heera|veena|neerja|swara|kalpana|samantha|zira|karen|moira|tessa|aria|jenny|serena|fiona/i;
+  const male   = /male|ravi|rishi|prabhat|hemant|madhur|daniel|david|alex|guy|oliver|fred/i;
+  if(kind==="girl" && female.test(v.name)) s += 30;
+  if(kind==="boy"  && male.test(v.name))   s += 30;
+  if(kind==="girl" && male.test(v.name))   s -= 20;
+  if(kind==="boy"  && female.test(v.name)) s -= 20;
+  return s;
+}
+
+function refreshVoices(){
+  if(!synth) return;
+  const all = synth.getVoices();
+  if(!all.length) return;
+  const en = all.filter(v=>/^en/i.test(v.lang));
+  voiceList = en.length ? en : all;
+
+  const best = kind => voiceList.slice().sort((a,b)=>scoreVoice(b,kind)-scoreVoice(a,kind))[0];
+  if(!boyURI  || !voiceList.some(v=>v.voiceURI===boyURI))  boyURI  = best("boy")?.voiceURI  || null;
+  if(!girlURI || !voiceList.some(v=>v.voiceURI===girlURI)) girlURI = best("girl")?.voiceURI || null;
+  buildVoicePickers();
+}
+
+function voiceFor(kind){
+  const uri = kind==="girl" ? girlURI : boyURI;
+  return voiceList.find(v=>v.voiceURI===uri) || null;
+}
+
+function buildVoicePickers(){
+  [["boyVoice",boyURI,"boy"],["girlVoice",girlURI,"girl"]].forEach(([id,cur,kind])=>{
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    sel.innerHTML = voiceList.map(v=>
+      `<option value="${v.voiceURI}" ${v.voiceURI===cur?"selected":""}>${v.name}${v.localService?" — offline":" — online"}</option>`
+    ).join("");
+    sel.onchange = e => {
+      if(kind==="girl") girlURI = e.target.value; else boyURI = e.target.value;
+    };
+  });
+  const hint = document.getElementById("voiceHint");
+  if(hint && voiceList.length===0){
+    hint.textContent = "No speech voices found on this device.";
+  }
+}
+
+/* Short clauses survive far better than long sentences. */
+function chunkText(text){
+  const parts = text.match(/[^.!?—,;]+[.!?—,;]*/g) || [text];
+  const out = [];
+  let cur = "";
+  parts.forEach(p=>{
+    if((cur + p).trim().length > 85){
+      if(cur.trim()) out.push(cur.trim());
+      cur = p;
+    } else cur += p;
+  });
+  if(cur.trim()) out.push(cur.trim());
+  return out;
+}
+
+function speakLine(line, whenDone, token){
+  const pieces = chunkText(line.text);
+  const isGirl = line.who === "Klinkaara";
+  const v = voiceFor(isGirl ? "girl" : "boy");
+  /* Only bend the pitch when both guides share one voice — pitch shifting is
+     what makes some Android engines stutter. */
+  const shared = boyURI && girlURI && boyURI === girlURI;
+  const pitch = shared ? (isGirl ? 1.35 : 0.8) : 1;
+
+  let k = 0;
+  const nextPiece = ()=>{
+    if(token !== explainToken) return;
+    if(k >= pieces.length){ whenDone(); return; }
+    const text = pieces[k];
+
+    const u = new SpeechSynthesisUtterance(text);
+    if(v){ u.voice = v; u.lang = v.lang; } else { u.lang = "en-IN"; }
+    u.pitch  = pitch;
+    u.rate   = speechRate;
+    u.volume = 1;
+
+    let guard = null, fired = false;
+    const carryOn = ()=>{
+      if(fired) return;
+      fired = true;
+      clearTimeout(guard);
+      k++;
+      pauseTimer = setTimeout(nextPiece, 120);
+    };
+    u.onend = carryOn;
+    u.onerror = ev =>{
+      /* a cancel from a new flight is not a failure — just stop */
+      if(ev && /interrupted|canceled|cancelled/i.test(ev.error||"")) { fired = true; clearTimeout(guard); return; }
+      carryOn();
+    };
+    guard = setTimeout(carryOn, 3500 + text.length*(160/speechRate));
+
+    try{
+      if(synth.paused) synth.resume();
+      synth.speak(u);
+    }catch(e){ carryOn(); }
+  };
+  nextPiece();
+}
+
+/* Some engines quietly park themselves. Nudge only when actually paused. */
+setInterval(()=>{
+  if(synth && synth.speaking && synth.paused){
+    try{ synth.resume(); }catch(e){}
+  }
+}, 1200);
+
+/* Runs the whole explanation: one bubble at a time, spoken or read. */
+function runExplanation(info){
+  if(!info) return;
+  stopSpeech();
+  const token = explainToken;
+  currentInfo = info;
+  let i = 0;
+
+  const advance = ()=>{
+    if(token !== explainToken) return;
+    if(i >= info.lines.length){
+      setStatus(`${info.name} — tap another state to fly on.`);
+      return;
+    }
+    const line = info.lines[i];
+    showMapBubble(line, i, info.lines.length);
+    const done = ()=>{
+      if(token !== explainToken) return;
+      i++;
+      pauseTimer = setTimeout(advance, 320);
+    };
+    if(voiceOn && synth) speakLine(line, done, token);
+    else pauseTimer = setTimeout(done, 2200 + line.text.length*52);
+  };
+
+  // a beat after cancel(), or Chrome swallows the first sentence
+  pauseTimer = setTimeout(advance, 260);
+}
+
+/* voices can load late on phones */
+function speak(info){
+  if(!info) return;
+  if(synth && voiceOn && synth.getVoices().length === 0){
+    let tries = 0;
+    const wait = setInterval(()=>{
+      if(synth.getVoices().length || ++tries > 12){
+        clearInterval(wait);
+        refreshVoices();
+        runExplanation(info);
+      }
+    }, 150);
+  } else {
+    runExplanation(info);
+  }
+}
+if(synth){
+  refreshVoices();
+  synth.addEventListener?.("voiceschanged", refreshVoices);
+  setTimeout(refreshVoices, 400);
+  setTimeout(refreshVoices, 1500);
+}
+
+function testVoice(kind){
+  primeAudio();
+  stopSpeech();
+  const token = ++explainToken;
+  const line = kind==="girl"
+    ? {who:"Klinkaara", text:"Namaste! I am Klinkaara. Come and see the famous temple of this state with me."}
+    : {who:"Jaisvik",   text:"Namaste! I am Jaisvik. Hold on tight, we are flying to the next state."};
+  setTimeout(()=>speakLine(line, ()=>{}, token), 260);
+}
+
+/* ============================================================
+   CHIPS + BUTTONS
+   ============================================================ */
+(function buildChips(){
+  const box = document.getElementById("chips");
+  STATES.forEach(s=>{
+    const b = document.createElement("button");
+    b.className="chip"; b.textContent=s.n;
+    b.onclick = ()=>flyTo({kind:"state",data:s});
+    box.appendChild(b);
+  });
+  const extras = [
+    ...NEIGHBOURS.map(nb=>({t:nb.n, go:{kind:"neighbour",data:nb}})),
+    {t:"Himalayas", go:{kind:"himalaya"}},
+    {t:"Mount Kailash", go:{kind:"kailash"}},
+    ...OCEANS.map(o=>({t:o.label.split(" ").map(w=>w[0]+w.slice(1).toLowerCase()).join(" "), go:{kind:"ocean",data:o}}))
+  ];
+  extras.forEach(x=>{
+    const b = document.createElement("button");
+    b.className="chip on"; b.textContent=x.t;
+    b.onclick = ()=>flyTo(x.go);
+    box.appendChild(b);
+  });
+})();
+
+document.getElementById("randomBtn").onclick = ()=>{
+  const s = STATES[Math.floor(Math.random()*STATES.length)];
+  flyTo({kind:"state",data:s});
+};
+document.getElementById("kailashBtn").onclick = ()=>flyTo({kind:"kailash"});
+document.getElementById("wholeBtn").onclick = ()=>{
+  zoomWhole();                      // the guides keep talking
+  setStatus("Whole map. Tap any state to fly there.");
+};
+document.getElementById("zinBtn").onclick  = ()=>zoomBy(1.35);
+document.getElementById("zoutBtn").onclick = ()=>zoomBy(1/1.35);
+const rb2 = document.getElementById("riverBtn");
+rb2.onclick = ()=>{
+  const rg = document.getElementById("rivers");
+  const off = rg.classList.toggle("off");
+  rb2.classList.toggle("on",!off);
+  rb2.textContent = off ? "Rivers off" : "Rivers on";
+  rb2.setAttribute("aria-pressed",String(!off));
+};
+document.getElementById("testBoy").onclick  = ()=>testVoice("boy");
+document.getElementById("testGirl").onclick = ()=>testVoice("girl");
+const vb = document.getElementById("voiceBtn");
+function syncVoiceBtn(){
+  vb.classList.toggle("on",voiceOn);
+  vb.textContent = voiceOn ? "Voices on" : "Voices off";
+  vb.setAttribute("aria-pressed",String(voiceOn));
+}
+vb.onclick = ()=>{
+  voiceOn = !voiceOn;
+  syncVoiceBtn();
+  speak(currentInfo);
+};
+
+/* first stop */
+const INTRO = {
+  name:"Ready when you are", eyebrow:"Bharat Sky Tour",
+  facts:[{icon:"pin",label:"Stops on the map",value:`${STATES.length} states and union territories`},
+         {icon:"peak",label:"Also on the route",value:"Himalayas, Mount Kailash, 8 neighbours, 3 waters"}],
+  lines:[
+    {who:"Jaisvik", text:"Namaste! I am Jaisvik. Tap any state on the map and I will fly us there."},
+    {who:"Klinkaara",text:"And I am Klinkaara. I will tell you the famous temple of every state we visit."}
+  ]
+};
+renderInfo(INTRO);
+showMapBubble(INTRO.lines[0], 0, INTRO.lines.length);
+</script>
+</body>
+</html>
